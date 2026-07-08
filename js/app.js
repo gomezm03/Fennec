@@ -13,7 +13,44 @@ const state = {
   cribSel: 0,
 };
 
-const ENDMILL_SVG = '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><rect x="20" y="4" width="8" height="16"/><path d="M20 20 L18 40 M28 20 L30 40 M18 40 L24 44 L30 40 M24 20 L24 44"/></svg>';
+/* shaded catalog-style tool renders */
+const COATS = {altin:['#6B5E7E','#372E47','#8E82A4'], tialn:['#565064','#2A2434','#7A7490'],
+  tin:['#E2BE4E','#96771C','#F2DC90'], ticn:['#617082','#3A4451','#8493A6'],
+  bright:['#C4CAD3','#848D99','#EDF0F4']};
+const TOOL_COAT = {'09990412':'altin','09990627':'tialn','09990981':'bright','09990455':'altin',
+  '09990118':'tin','09990904':'bright','09991177':'ticn','09990619':'altin'};
+let _uid=0;
+function toolArt(kind, coat){
+  const cc = COATS[coat]||COATS.altin, c1=cc[0], c2=cc[1], hi=cc[2], u='tg'+(++_uid);
+  const steel = '<linearGradient id="'+u+'s" x1="0" y1="0" x2="1" y2="0">'
+    +'<stop offset="0" stop-color="#7E8791"/><stop offset=".28" stop-color="#E9EDF2"/>'
+    +'<stop offset=".55" stop-color="#B6BDC6"/><stop offset="1" stop-color="#6B737E"/></linearGradient>';
+  const coatG = '<linearGradient id="'+u+'c" x1="0" y1="0" x2="1" y2="0">'
+    +'<stop offset="0" stop-color="'+c2+'"/><stop offset=".3" stop-color="'+hi+'"/>'
+    +'<stop offset=".55" stop-color="'+c1+'"/><stop offset="1" stop-color="'+c2+'"/></linearGradient>';
+  let body='';
+  if(kind==='drill'){
+    body = '<rect x="26" y="4" width="12" height="18" fill="url(#'+u+'s)"/>'
+      +'<path d="M26 22 h12 l-1 26 L32 60 27 48 Z" fill="url(#'+u+'c)"/>'
+      +'<path d="M28 24 C35 32,30 42,34 52 M35 24 C29 34,35 42,31 54" stroke="'+hi+'" stroke-width="1" fill="none" opacity=".8"/>'
+      +'<path d="M27 48 L32 60 L37 48" fill="'+c2+'" opacity=".55"/>';
+  } else if(kind==='chamfer'){
+    body = '<rect x="26" y="4" width="12" height="30" fill="url(#'+u+'s)"/>'
+      +'<path d="M26 34 h12 v10 l-6 12 -6 -12 Z" fill="url(#'+u+'c)"/>'
+      +'<path d="M28 36 l3 16 M35 36 l-2 16" stroke="'+hi+'" stroke-width="1" opacity=".8"/>';
+  } else if(kind==='ball'){
+    body = '<rect x="26" y="4" width="12" height="22" fill="url(#'+u+'s)"/>'
+      +'<path d="M26 26 h12 v26 a6 6 0 0 1 -12 0 Z" fill="url(#'+u+'c)"/>'
+      +'<path d="M29 28 C35 36,30 44,33 54 M35 28 C30 38,36 44,31 52" stroke="'+hi+'" stroke-width="1" fill="none" opacity=".8"/>';
+  } else {
+    body = '<rect x="26" y="4" width="12" height="20" fill="url(#'+u+'s)"/>'
+      +'<path d="M27 24 h10 l1 4 v30 h-14 v-30 Z" fill="url(#'+u+'c)"/>'
+      +'<path d="M28 26 C36 36,29 46,35 58 M33 25 C27 37,35 45,29 57 M37 27 C32 39,38 47,33 58" stroke="'+hi+'" stroke-width="1.1" fill="none" opacity=".85"/>'
+      +'<path d="M24 58 h16 l-3 3 h-10 Z" fill="'+c2+'"/>';
+  }
+  return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs>'+steel+coatG+'</defs>'
+    +'<ellipse cx="32" cy="61" rx="14" ry="2" fill="#12161B" opacity=".12"/>'+body+'</svg>';
+}
 
 const TOP3 = [
   {brand:'Accupro', sku:'09990412', name:'1/2" 4-Flute Carbide Square End Mill — AlTiN', price:84.12, fit:96,
@@ -66,8 +103,16 @@ const XM = [
 
 /* ---------- toast / cart bar / tabs ---------- */
 let toastT;
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400); }
+function toast(msg, undoFn){
+  const t=$('#toast');
+  t.innerHTML = '<svg class="t-ic" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span></span>'
+    + (undoFn?'<button class="t-undo">Undo</button>':'');
+  t.querySelector('span').textContent = msg;
+  if(undoFn){ t.style.pointerEvents='auto';
+    t.querySelector('.t-undo').addEventListener('click',()=>{ undoFn(); t.classList.remove('show'); t.style.pointerEvents='none'; });
+  } else t.style.pointerEvents='none';
+  t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>{t.classList.remove('show');t.style.pointerEvents='none';},2600); }
 
 function cartTotal(){ return state.cart.reduce((s,l)=>s+l.price*l.qty,0); }
 function renderBar(){
@@ -76,11 +121,14 @@ function renderBar(){
   $('#barTotal').textContent = money(cartTotal());
   $('#cartBadge').textContent = n||'';
   $('#libBadge').textContent = state.lib.length||'';
+  const cb=$('#cartbar'); if(cb){ cb.classList.remove('pulse'); void cb.offsetWidth; cb.classList.add('pulse'); }
 }
 function addCart(item, qty=1){
+  const snap = JSON.stringify(state.cart);
   const ex = state.cart.find(l=>l.sku===item.sku);
   if(ex) ex.qty+=qty; else state.cart.push({sku:item.sku,name:(item.brand?item.brand+' ':'')+item.name,price:item.price,qty});
-  renderBar(); renderCart(); toast('Added to staging cart — ' + item.sku);
+  renderBar(); renderCart();
+  toast('Added to staging cart — ' + item.sku, ()=>{ state.cart = JSON.parse(snap); renderBar(); renderCart(); });
 }
 function addLib(item){
   if(state.lib.find(l=>l.sku===item.sku)){ toast('Already in Library — '+item.sku); return; }
@@ -206,7 +254,7 @@ function renderResults(sku){
   if(state.view==='cards'||sku){
     body = shown.map((t,i)=>`
       <div class="rescard ${i===0&&!sku?'best':''}">
-        <div class="thumb">${ENDMILL_SVG}</div>
+        <div class="thumb">${toolArt('endmill', TOOL_COAT[t.sku])}</div>
         <div>
           <div class="rc-name">${starIf(t.brand)}${t.brand} — ${t.name}</div>
           <div class="rc-sku">SKU ${t.sku} · simulated</div>
@@ -271,7 +319,7 @@ function renderMatch(){
         <div class="dc-name">OEM 1/2" 4-Flute End Mill</div><div class="dc-sku">${input} · simulated</div>
         <div class="dc-price">$142.55</div><div class="dc-lead muted">5-day lead</div></div>
       <div class="duel-vs">VS</div>
-      <div class="duelcard win"><span class="dc-tag">MSC match</span>
+      <div class="duelcard win"><div class="thumb-duel">${toolArt('endmill', TOOL_COAT[M.sku])}</div><span class="dc-tag">MSC match</span>
         <div class="dc-name">${starIf(M.brand)}${M.brand} — ${M.name}</div><div class="dc-sku">SKU ${M.sku} · simulated</div>
         <div class="dc-price">${money(M.price)}</div><div class="dc-lead stock-ok">${M.lead} · ${money(142.55-M.price)} less</div></div>
     </div>
@@ -349,7 +397,7 @@ $('#poGo').addEventListener('click',()=>{
 /* ---------- LIBRARY + Extract & Match ---------- */
 function renderLib(){
   $('#libList').innerHTML = state.lib.length
-    ? state.lib.map(l=>`<div class="libitem"><div><b>${l.name}</b><span class="li-preset">SKU ${l.sku} · ${l.preset}</span></div><span class="rr-p">${money(l.price)}</span></div>`).join('')
+    ? state.lib.map(l=>`<div class="libitem"><div class="thumb-sm">${toolArt('endmill', TOOL_COAT[l.sku]||'altin')}</div><div><b>${l.name}</b><span class="li-preset">SKU ${l.sku} · ${l.preset}</span></div><span class="rr-p">${money(l.price)}</span></div>`).join('')
     : '<div class="emptybox">Nothing staged yet. Add tools from Find, Match, or an Extract &amp; Match audit — then export them all to Fusion in one move.</div>';
   $('#libExport').disabled = $('#libToCart').disabled = !state.lib.length;
 }
@@ -403,6 +451,7 @@ function renderCart(){
   if(!state.cart.length){ L.innerHTML='<div class="emptybox">The staging cart is empty. Add tools from Find, Match, Crib POs, or an Extract &amp; Match audit.</div>'; X.innerHTML=''; return; }
   L.innerHTML = state.cart.map((l,i)=>`
     <div class="cartline">
+      <div class="thumb-sm">${toolArt('endmill', TOOL_COAT[l.sku]||'bright')}</div>
       <span class="stepper"><button data-q="${i}|-1" aria-label="decrease">−</button><span>${l.qty}</span><button data-q="${i}|1" aria-label="increase">+</button></span>
       <div><b>${l.name}</b><br><span class="mono muted" style="font-size:10px">SKU ${l.sku}</span></div>
       <span class="rr-p">${money(l.price*l.qty)}</span>

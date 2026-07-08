@@ -11,108 +11,182 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="appbar" aria-hidden="true">
+
+<div class="appbar">
   <span class="fdot"></span><span class="fdot"></span><span class="fdot"></span>
-  <span>Autodesk Fusion 360 — Manufacture › Setup1 › [2D Pocket] Pocket_3 · workpiece: AL 6061-T6 (simulated)</span>
+  <span class="appbar-crumb">Autodesk Fusion 360 &nbsp;›&nbsp; Manufacture &nbsp;›&nbsp; Setup1 &nbsp;›&nbsp; [2D Pocket] Pocket_3</span>
   <span class="demopill">SIMULATED DATA</span>
 </div>
-<div class="appwrap">
-<div class="panel" id="panel">
-        <div class="p-head">
-          <div>
-            <div class="p-logo">MSC Tools<span class="cursorbar" style="height:.8em" aria-hidden="true"></span></div>
-            <div class="p-sub">Built to make you better</div>
-          </div>
-          <div class="p-acct">Acct #0000-DEMO<br>Bay 2 crib <b>✓ connected</b></div>
+
+<div class="main">
+
+  <!-- Fusion-style icon rail -->
+  <nav class="rail" aria-label="Toolbar (decorative)">
+    <button class="rail-btn" title="Select" aria-label="Select"><svg viewBox="0 0 24 24"><path d="M4 3l7 18 2.5-7.5L21 11z"/></svg></button>
+    <button class="rail-btn" title="Measure" aria-label="Measure"><svg viewBox="0 0 24 24"><path d="M3 17L17 3l4 4L7 21zM8 12l2 2M11 9l2 2M14 6l2 2"/></svg></button>
+    <button class="rail-btn" title="Setups" aria-label="Setups"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"/><path d="M12 11l8-4.5M12 11v9M12 11L4 6.5"/></svg></button>
+    <button class="rail-btn active" title="MSC Tools" aria-label="MSC Tools panel"><span>MSC</span></button>
+    <button class="rail-btn" title="Simulate" aria-label="Simulate"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9z"/></svg></button>
+    <span class="rail-spacer"></span>
+    <button class="rail-btn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></button>
+  </nav>
+
+  <!-- simulated CAM viewport -->
+  <div class="viewport" aria-hidden="true">
+    <div class="vtree">
+      <div class="vt-row">&#9662; <b>Setup1</b> <span class="vt-tag">WCS: G54</span></div>
+      <div class="vt-row vt-in">&#9656; Stock — AL 6061-T6</div>
+      <div class="vt-row vt-in vt-sel">&#9679; [2D Pocket] <b>Pocket_3</b></div>
+      <div class="vt-row vt-in">&#9675; [Drill] Holes_4x</div>
+      <div class="vt-row vt-in">&#9675; [2D Contour] Profile_1</div>
+    </div>
+    <svg class="vscene" viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="vtop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#B8C0CB"/><stop offset="1" stop-color="#8F99A6"/>
+        </linearGradient>
+        <linearGradient id="vside" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#6E7887"/><stop offset="1" stop-color="#4E5765"/>
+        </linearGradient>
+        <linearGradient id="vfront" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#828D9C"/><stop offset="1" stop-color="#5C6675"/>
+        </linearGradient>
+        <linearGradient id="vpock" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#59626F"/><stop offset="1" stop-color="#78828F"/>
+        </linearGradient>
+      </defs>
+      <g>
+        <polygon points="120,220 420,160 560,230 260,300" fill="url(#vtop)"/>
+        <polygon points="120,220 260,300 260,380 120,296" fill="url(#vside)"/>
+        <polygon points="260,300 560,230 560,306 260,380" fill="url(#vfront)"/>
+        <polygon points="230,228 390,196 470,232 310,266" fill="url(#vpock)"/>
+        <polygon points="230,228 310,266 310,282 230,243" fill="#3E4650"/>
+        <polygon points="310,266 470,232 470,247 310,282" fill="#4A525D"/>
+        <polygon points="246,240 394,210 452,236 306,268" fill="#525B67"/>
+        <g fill="none" stroke="#4D8DFF" stroke-width="1.6" opacity=".95">
+          <path d="M340 238 l24 -5 12 6 -26 6 z"/>
+          <path d="M318 240 l52 -11 26 12 -54 12 z" opacity=".8"/>
+          <path d="M296 241 l82 -17 40 19 -84 18 z" opacity=".6"/>
+          <path d="M272 243 l112 -23 56 26 -116 24 z" opacity=".4"/>
+        </g>
+        <circle cx="340" cy="238" r="3.5" fill="#4D8DFF"/>
+      </g>
+      <polygon points="230,228 390,196 470,232 310,266" fill="none" stroke="#4D8DFF" stroke-width="2"/>
+      <g font-family="JetBrains Mono, monospace">
+        <path d="M400 214 L488 150 L580 150" stroke="#4D8DFF" stroke-width="1" fill="none"/>
+        <text x="492" y="143" fill="#9CC0FF" font-size="13">Pocket_3</text>
+        <text x="492" y="160" fill="#6C7787" font-size="10">&#216;.500 &#215; 1.25 DP &#183; R.000</text>
+        <text x="124" y="212" fill="#8B96A5" font-size="10">AL 6061-T6</text>
+      </g>
+      <g stroke-width="2" font-family="JetBrains Mono, monospace" font-size="10">
+        <path d="M60 430 L104 418" stroke="#E05A5A"/><text x="108" y="422" fill="#E05A5A">X</text>
+        <path d="M60 430 L92 448" stroke="#54B96E"/><text x="95" y="456" fill="#54B96E">Y</text>
+        <path d="M60 430 L60 386" stroke="#4D8DFF"/><text x="56" y="378" fill="#4D8DFF">Z</text>
+      </g>
+    </svg>
+    <div class="vhud"><span>Haas VF-2</span><span>10,000 RPM max</span><span>WCS G54</span></div>
+  </div>
+
+  <!-- docked MSC panel -->
+  <div class="dock">
+    <div class="panel" id="panel">
+      <div class="p-head">
+        <div>
+          <div class="p-logo">MSC Tools<span class="cursorbar" aria-hidden="true"></span></div>
+          <div class="p-sub">Built to make you better</div>
         </div>
+        <div class="p-acct">Acct #0000-DEMO<br>Bay 2 crib <b>&#10003; connected</b></div>
+      </div>
 
-        <div class="p-tabs" role="tablist" aria-label="Panel tabs">
-          <button class="p-tab" role="tab" aria-selected="true" data-tab="find">Find</button>
-          <button class="p-tab" role="tab" aria-selected="false" data-tab="match">Match</button>
-          <button class="p-tab" role="tab" aria-selected="false" data-tab="crib">Crib</button>
-          <button class="p-tab" role="tab" aria-selected="false" data-tab="library">Library<span class="bdg" id="libBadge"></span></button>
-          <button class="p-tab" role="tab" aria-selected="false" data-tab="cart">Cart<span class="bdg" id="cartBadge"></span></button>
-        </div>
+      <div class="p-tabs" role="tablist" aria-label="Panel tabs">
+        <button class="p-tab" role="tab" aria-selected="true" data-tab="find"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>Find</button>
+        <button class="p-tab" role="tab" aria-selected="false" data-tab="match"><svg class="ic" viewBox="0 0 24 24"><path d="M16 3h5v5M21 3l-7 7M8 21H3v-5M3 21l7-7"/></svg>Match</button>
+        <button class="p-tab" role="tab" aria-selected="false" data-tab="crib"><svg class="ic" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Crib</button>
+        <button class="p-tab" role="tab" aria-selected="false" data-tab="library"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V5a2 2 0 012-2h13v14H6a2 2 0 00-2 2zm0 0a2 2 0 002 2h13"/></svg>Library<span class="bdg" id="libBadge"></span></button>
+        <button class="p-tab" role="tab" aria-selected="false" data-tab="cart"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2 3h3l2.6 12.5a1.5 1.5 0 001.5 1.2h8.6a1.5 1.5 0 001.5-1.2L21 7H6"/></svg>Cart<span class="bdg" id="cartBadge"></span></button>
+      </div>
 
-        <div class="p-body">
+      <div class="p-body" id="pbody">
 
-          <div class="p-view on" id="view-find">
-            <div id="wizard">
-              <div class="steprail" id="steprail"></div>
-              <div id="wizStep"></div>
-              <div class="wiz-foot">
-                <button class="tbtn" id="wizBack">Back</button>
-                <span class="spacer"></span>
-                <button class="tbtn pri" id="wizNext">Next</button>
-              </div>
-              <div class="skubox">
-                <label for="skuIn">Know the part? Skip the steps.</label>
-                <input id="skuIn" placeholder="MSC SKU · e.g. 09990412" aria-label="MSC SKU">
-                <button class="tbtn sm" id="skuGo">Look up</button>
-              </div>
-            </div>
-            <div id="findResults" hidden></div>
-          </div>
-
-          <div class="p-view" id="view-match">
-            <div class="p-h">Cross-reference</div>
-            <p class="p-note">Paste any competitor part number. MSC Tools identifies the maker and returns the best MSC equivalent — with the evidence.</p>
-            <div class="matchin">
-              <input id="matchIn" value="CM-2F340-0500-DEMO" aria-label="Competitor part number">
-              <button class="tbtn pri" id="matchGo">Match it</button>
-            </div>
-            <div id="matchOut" hidden></div>
-          </div>
-
-          <div class="p-view" id="view-crib">
-            <div class="p-h">Virtual Crib</div>
-            <p class="p-note">Named shop-inventory profiles — vending machines, cribs, or per-machine kits. Below-minimum lines flag red.</p>
-            <div class="cribhead">
-              <select id="cribSel" aria-label="Crib profile"></select>
-              <button class="tbtn sm" id="cribRename">Rename</button>
-              <button class="tbtn sm" id="cribNew">New profile</button>
+        <div class="p-view on" id="view-find">
+          <div id="wizard">
+            <div class="steprail" id="steprail"></div>
+            <div id="wizStep"></div>
+            <div class="wiz-foot">
+              <button class="tbtn" id="wizBack">Back</button>
               <span class="spacer"></span>
-              <button class="tbtn sm" id="cribAdd">Add SKU</button>
+              <button class="tbtn pri" id="wizNext">Next</button>
             </div>
-            <div id="cribTbl"></div>
-            <button class="tbtn pri" id="poGo">Generate PO — MSC SKUs only</button>
-            <div id="poOut"></div>
-          </div>
-
-          <div class="p-view" id="view-library">
-            <div class="p-h">My Library</div>
-            <p class="p-note">Every "Add to Library" lands here. One export writes geometry and material-matched feeds/speeds presets into Fusion's tool library.</p>
-            <div id="libList"></div>
-            <div style="display:flex;gap:8px;margin:10px 0 26px">
-              <button class="tbtn pri" id="libExport">Export to CAM</button>
-              <button class="tbtn" id="libToCart">Add all to cart</button>
+            <div class="skubox">
+              <label for="skuIn">Know the part? Skip the steps.</label>
+              <input id="skuIn" placeholder="MSC SKU &#183; e.g. 09990412" aria-label="MSC SKU">
+              <button class="tbtn sm" id="skuGo">Look up</button>
             </div>
-            <div class="p-h">Extract &amp; Match</div>
-            <p class="p-note">The reverse direction: read this document's CAM tool library, match every competitor part number to MSC, and price the whole set as a theoretical cart.</p>
-            <div class="xm-drop">Reads the current document's tool library — or drop a <span class="mono">.tools</span> / <span class="mono">.csv</span> here.</div>
-            <button class="tbtn pri" id="xmGo">Audit this document's tooling</button>
-            <div id="xmOut"></div>
           </div>
-
-          <div class="p-view" id="view-cart">
-            <div class="p-h">Staging cart</div>
-            <p class="p-note">A priced what-if. It becomes an order, a quote, or a CAM library only on explicit action.</p>
-            <div id="cartList"></div>
-            <div id="cartExtras"></div>
-          </div>
-
+          <div id="findResults" hidden></div>
         </div>
 
-        <div class="p-cartbar">
-          <span class="lab">Staging cart</span>
-          <span class="val" id="barCount">0 items</span>
-          <span class="val" id="barTotal">$0.00</span>
-          <button id="barOpen">Review</button>
+        <div class="p-view" id="view-match">
+          <div class="p-h">Cross-reference</div>
+          <p class="p-note">Paste any competitor part number. MSC Tools identifies the maker and returns the best MSC equivalent — with the evidence.</p>
+          <div class="matchin">
+            <input id="matchIn" value="CM-2F340-0500-DEMO" aria-label="Competitor part number">
+            <button class="tbtn pri" id="matchGo">Match it</button>
+          </div>
+          <div id="matchOut" hidden></div>
         </div>
 
-        <div class="toast" id="toast" role="status" aria-live="polite"></div>
-      </div><!-- /panel -->
+        <div class="p-view" id="view-crib">
+          <div class="p-h">Virtual Crib</div>
+          <p class="p-note">Named shop-inventory profiles — vending machines, cribs, or per-machine kits. Below-minimum lines flag red.</p>
+          <div class="cribhead">
+            <select id="cribSel" aria-label="Crib profile"></select>
+            <button class="tbtn sm" id="cribRename">Rename</button>
+            <button class="tbtn sm" id="cribNew">New</button>
+            <span class="spacer"></span>
+            <button class="tbtn sm" id="cribAdd">+ Add SKU</button>
+          </div>
+          <div id="cribTbl"></div>
+          <button class="tbtn pri" id="poGo">Generate PO — MSC SKUs only</button>
+          <div id="poOut"></div>
+        </div>
+
+        <div class="p-view" id="view-library">
+          <div class="p-h">My Library</div>
+          <p class="p-note">Every "Add to Library" lands here. One export writes geometry and material-matched feeds/speeds presets into Fusion's tool library.</p>
+          <div id="libList"></div>
+          <div style="display:flex;gap:8px;margin:10px 0 24px">
+            <button class="tbtn pri" id="libExport">Export to CAM</button>
+            <button class="tbtn" id="libToCart">Add all to cart</button>
+          </div>
+          <div class="p-h">Extract &amp; Match</div>
+          <p class="p-note">The reverse direction: read this document's CAM tool library, match every competitor part number to MSC, and price the whole set as a theoretical cart.</p>
+          <div class="xm-drop">Reads the current document's tool library — or drop a <span class="mono">.tools</span> / <span class="mono">.csv</span> here.</div>
+          <button class="tbtn pri" id="xmGo">Audit this document's tooling</button>
+          <div id="xmOut"></div>
+        </div>
+
+        <div class="p-view" id="view-cart">
+          <div class="p-h">Staging cart</div>
+          <p class="p-note">A priced what-if. It becomes an order, a quote, or a CAM library only on explicit action.</p>
+          <div id="cartList"></div>
+          <div id="cartExtras"></div>
+        </div>
+
+      </div>
+
+      <div class="p-cartbar" id="cartbar">
+        <span class="lab">Staging cart</span>
+        <span class="val" id="barCount">0 items</span>
+        <span class="val" id="barTotal">$0.00</span>
+        <button id="barOpen">Review</button>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+  </div>
 </div>
+
 <script src="js/app.js" defer></script>
 </body>
 </html>
