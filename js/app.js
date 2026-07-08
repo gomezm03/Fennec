@@ -18,7 +18,7 @@ const state = {
 const COATS = {altin:['#6B5E7E','#372E47','#8E82A4'], tialn:['#565064','#2A2434','#7A7490'],
   tin:['#E2BE4E','#96771C','#F2DC90'], ticn:['#617082','#3A4451','#8493A6'],
   bright:['#C4CAD3','#848D99','#EDF0F4']};
-const TOOL_COAT = {'09990412':'altin','09990627':'tialn','09990981':'bright','09990455':'altin',
+const TOOL_COAT = {'09990412':'altin','09990627':'tialn','09990981':'bright','09990455':'altin','09991172':'ticn',
   '09990118':'tin','09990904':'bright','09991177':'ticn','09990619':'altin'};
 let _uid=0;
 function toolArt(kind, coat){
@@ -70,10 +70,12 @@ const MORE = [
   ['Hertel','09991701','1/2" 4FL Roughing (corncob)',74.60],['OSG','09991766','1/2" 4FL Variable-index — EXOCARB',109.90],
 ];
 
-const MATCH_PRIMARY = {brand:'Accupro', sku:'09990412', name:'1/2" 4-Flute Carbide Square End Mill — AlTiN', price:84.12, fit:96, lead:'Next day'};
+const THEIRS = {name:'OEM 1/2" 4-Flute End Mill', dia:'.500', fl:'4', loc:'1.25', coat:'AlTiN', price:142.55, lead:'5-day'};
 const MATCH_ALTS = [
-  {brand:'Hertel', sku:'09990627', name:'1/2" 4FL Square End Mill — TiAlN', price:61.30, fit:93, lead:'Next day', loc:'1.00"'},
-  {brand:'Niagara', sku:'09991172', name:'1/2" 4FL Square End Mill — TiCN', price:71.88, fit:90, lead:'Next day', loc:'1.25"'},
+  {brand:'Accupro', sku:'09990412', name:'1/2" 4-Flute Carbide Square End Mill — AlTiN', price:84.12, fit:96, lead:'Next day', dia:'.500', fl:'4', loc:'1.25', coat:'AlTiN'},
+  {brand:'Hertel',  sku:'09990627', name:'1/2" 4-Flute Carbide Square End Mill — TiAlN', price:61.30, fit:93, lead:'Next day', dia:'.500', fl:'4', loc:'1.00', coat:'TiAlN'},
+  {brand:'Niagara', sku:'09991172', name:'1/2" 4-Flute Square End Mill — TiCN',          price:71.88, fit:90, lead:'Next day', dia:'.500', fl:'4', loc:'1.25', coat:'TiCN'},
+  {brand:'OSG',     sku:'09990981', name:'1/2" 5-Flute Carbide End Mill — Bright',       price:97.45, fit:88, lead:'2-day',    dia:'.500', fl:'5', loc:'1.25', coat:'Bright'},
 ];
 
 const CRIBS = [
@@ -154,8 +156,38 @@ const ISO = [
   ['H','Hardened','var(--iso-h)','45–65 HRC'],
 ];
 const PROCS = ['End milling','Drilling','Face milling','Threading','Slotting','Chamfer'];
+const PROC_ICONS = {
+ 'End milling':'<svg viewBox="0 0 32 32"><rect x="13" y="3" width="6" height="7"/><path d="M12.5 10h7v12h-7zM16 10v12"/><path d="M9 27h14M19.5 24.5L23 27l-3.5 2.5"/></svg>',
+ 'Drilling':'<svg viewBox="0 0 32 32"><rect x="13" y="3" width="6" height="7"/><path d="M13 10h6l-1.2 9L16 24l-1.8-5z"/><path d="M26 10v11M23.5 18.5L26 21l2.5-2.5"/></svg>',
+ 'Face milling':'<svg viewBox="0 0 32 32"><rect x="8" y="5" width="16" height="8" rx="1.5"/><path d="M11 13l1.5 3.5M16 13v3.5M21 13l-1.5 3.5"/><path d="M5 23h22M5 27h22"/></svg>',
+ 'Threading':'<svg viewBox="0 0 32 32"><rect x="13" y="3" width="6" height="6"/><path d="M13 9h6v13l-3 5-3-5z"/><path d="M12 13h8M12 16.5h8M12 20h8"/></svg>',
+ 'Slotting':'<svg viewBox="0 0 32 32"><path d="M4 26h7v-9h10v9h7"/><rect x="14" y="4" width="4" height="10"/></svg>',
+ 'Chamfer':'<svg viewBox="0 0 32 32"><path d="M5 26V8h13l9 9v9z"/><path d="M18 8l9 9" stroke-dasharray="3 3"/></svg>'
+};
 const BRANDS = ['Accupro','Hertel','SGS','Niagara','Kennametal','OSG'];
 const STEPS = ['Materials','Process','Brands','Size & limits'];
+
+/* preferred brands: one shared setting, editable on Find, Match, and Library */
+function renderBrandBars(){
+  ['#brandsMatch','#brandsXm'].forEach(sel=>{
+    const el = $(sel); if(!el) return;
+    el.innerHTML = '<span class="bb-lab">Preferred brands</span>'
+      + BRANDS.map(b=>`<button class="chip xs" data-bb="${b}" aria-pressed="${state.brands.has(b)}">${b}</button>`).join('')
+      + `<button class="chip xs" data-bb="" aria-pressed="${state.brands.size===0}">No preference</button>`;
+    el.querySelectorAll('[data-bb]').forEach(btn=>btn.addEventListener('click',()=>{
+      const v = btn.dataset.bb;
+      if(!v) state.brands.clear();
+      else state.brands.has(v) ? state.brands.delete(v) : state.brands.add(v);
+      renderBrandBars(); refreshRankedViews();
+    }));
+  });
+}
+function refreshRankedViews(){
+  if(!$('#matchOut').hidden) renderMatch();
+  if($('#xmOut').innerHTML) renderXM();
+  if(!$('#findResults').hidden) renderResults();
+  if(!$('#wizard').hidden && state.wiz.step===2) renderWiz();
+}
 
 function railVal(i){
   const w=state.wiz;
@@ -188,8 +220,9 @@ function renderWiz(){
   if(w.step===1){
     el.innerHTML = `<div class="p-h">Process</div>
       <p class="p-note">What operation are you tooling for?</p>
-      <div class="optrow">${PROCS.map(p=>`
-        <button class="chip" data-proc="${p}" aria-pressed="${w.proc===p}">${p}</button>`).join('')}</div>`;
+      <div class="proc-grid">${PROCS.map(p=>`
+        <button class="proc" data-proc="${p}" aria-pressed="${w.proc===p}">
+          <span class="proc-ic">${PROC_ICONS[p]}</span><span>${p}</span></button>`).join('')}</div>`;
     $$('[data-proc]').forEach(b=>b.addEventListener('click',()=>{ w.proc=b.dataset.proc; renderWiz(); }));
   }
   if(w.step===2){
@@ -202,7 +235,7 @@ function renderWiz(){
       const v=b.dataset.brand;
       if(!v) state.brands.clear();
       else state.brands.has(v)?state.brands.delete(v):state.brands.add(v);
-      renderWiz();
+      renderWiz(); renderBrandBars();
     }));
   }
   if(w.step===3){
@@ -306,52 +339,78 @@ function renderResults(sku){
 }
 
 /* ---------- MATCH ---------- */
-let matchPick = MATCH_PRIMARY;
+/* ---------- MATCH — alternatives explorer ---------- */
 const MATCH_HIST = [];
+const CMP_SET = new Set();
+function sortAlts(list){ return [...list].sort((a,b)=>(state.brands.has(b.brand)-state.brands.has(a.brand))||b.fit-a.fit); }
+function specMark(same){ return same ? '<span class="mk-ok">\u2713</span>' : '<span class="mk-close">~</span>'; }
 function renderMatch(){
   const input = $('#matchIn').value.trim()||'CM-2F340-0500-DEMO';
   if(!MATCH_HIST.includes(input)){ MATCH_HIST.unshift(input); if(MATCH_HIST.length>6) MATCH_HIST.pop(); }
-  const M = matchPick, out = $('#matchOut'); out.hidden=false;
-  const alts = [MATCH_PRIMARY,...MATCH_ALTS].filter(a=>a.sku!==M.sku);
-  const locTheirs='1.25"', locOurs = M.sku==='09990627' ? '1.00"' : '1.25"';
+  const out = $('#matchOut'); out.hidden=false;
+  const alts = sortAlts(MATCH_ALTS);
+  const sel = alts.filter(a=>CMP_SET.has(a.sku));
   out.innerHTML = `
-    <div class="idline">Maker identified: <b>Sandvik-format part number</b> <span class="mono">${input}</span> · pattern match on OEM catalog structure (simulated)</div>
-    <div class="confband"><span class="pct">${M.fit}%</span> match confidence — best MSC equivalent found in <b>${M.brand}</b></div>
-    <div class="duel">
-      <div class="duelcard"><span class="dc-tag">Theirs</span>
-        <div class="dc-name">OEM 1/2" 4-Flute End Mill</div><div class="dc-sku">${input} · simulated</div>
-        <div class="dc-price">$142.55</div><div class="dc-lead muted">5-day lead</div></div>
-      <div class="duel-vs">VS</div>
-      <div class="duelcard win"><div class="thumb-duel">${toolArt('endmill', TOOL_COAT[M.sku])}</div><span class="dc-tag">MSC match</span>
-        <div class="dc-name">${starIf(M.brand)}${M.brand} — ${M.name}</div><div class="dc-sku">SKU ${M.sku} · simulated</div>
-        <div class="dc-price">${money(M.price)}</div><div class="dc-lead stock-ok">${M.lead} · ${money(142.55-M.price)} less</div></div>
+    <div class="idline">Identified: <b>Sandvik-format part number</b> <span class="mono">${input}</span> \u00b7 matched to OEM catalog spec (simulated)</div>
+    <div class="refcard">
+      <span class="rf-tag">Your part</span>
+      <div class="rf-body">
+        <div><div class="rc-name">${THEIRS.name}</div>
+          <div class="rc-sku">${input}</div>
+          <div class="rc-spec">\u00d8 ${THEIRS.dia}" \u00b7 ${THEIRS.fl}FL \u00b7 LOC ${THEIRS.loc}" \u00b7 ${THEIRS.coat}</div></div>
+        <div class="rc-side"><div class="rc-price">${money(THEIRS.price)} <small>ea.</small></div>
+          <div class="rc-fitlab muted">${THEIRS.lead} lead</div></div>
+      </div>
     </div>
-    <table class="delta"><thead><tr><th>Spec</th><th>Theirs</th><th>MSC match</th><th>Δ</th></tr></thead><tbody>
-      <tr><td>Diameter</td><td>.500"</td><td>.500"</td><td class="mk-ok">✓ exact</td></tr>
-      <tr><td>Flutes</td><td>4</td><td>4</td><td class="mk-ok">✓ exact</td></tr>
-      <tr><td>LOC</td><td>${locTheirs}</td><td>${locOurs}</td><td class="${locOurs===locTheirs?'mk-ok':'mk-close'}">${locOurs===locTheirs?'✓ exact':'~ close — within working tolerance for this class of cut'}</td></tr>
-      <tr><td>Coating</td><td>AlTiN</td><td>${M.sku==='09990627'?'TiAlN':M.sku==='09991172'?'TiCN':'AlTiN'}</td><td class="${M.sku==='09990412'?'mk-ok':'mk-close'}">${M.sku==='09990412'?'✓ exact':'~ close — equivalent class for ISO N'}</td></tr>
-    </tbody></table>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button class="tbtn pri" id="mLib">Add to Library</button>
-      <button class="tbtn" id="mCart">Add to cart — ${money(M.price)}</button></div>
-    <div class="p-h" style="font-size:12px">Alternates — tap to promote</div>
-    ${alts.map(a=>`<button class="altrow" data-alt="${a.sku}">${starIf(a.brand)}<b>${a.brand}</b> ${a.name}
-      <span class="mono">${a.sku}</span> <span class="fitpct">${a.fit}%</span><span class="rr-p">${money(a.price)}</span></button>`).join('')}
-    <p class="brandnote">Preferred brands applied — <a id="mEdit">edit in Find</a>.</p>
+    <div class="p-h" style="font-size:14px;margin:20px 0 10px">${alts.length} MSC alternatives <span class="muted" style="font-weight:500;font-size:12px">\u00b7 ranked by fit \u00b7 select any to compare</span></div>
+    ${alts.map(a=>`
+      <div class="rescard">
+        <div class="thumb">${toolArt('endmill', TOOL_COAT[a.sku])}</div>
+        <div>
+          <div class="rc-name">${starIf(a.brand)}${a.brand} \u2014 ${a.name}</div>
+          <div class="rc-sku">MSC #${a.sku} \u00b7 simulated</div>
+          <div class="rc-spec">\u00d8 ${a.dia}" \u00b7 ${a.fl}FL \u00b7 LOC ${a.loc}" \u00b7 ${a.coat}</div>
+          <div class="rc-meta"><span class="stock-ok">${a.lead}</span>
+            ${a.price<THEIRS.price?`<span class="savechip">Save ${money(THEIRS.price-a.price)}</span>`:''}</div>
+        </div>
+        <div class="rc-side">
+          <div><div class="rc-price">${money(a.price)} <small>ea.</small></div>
+            <div class="rc-fitlab"><span class="fitpct">${a.fit}%</span> fit</div></div>
+          <div class="rc-actions">
+            <button class="tbtn sm" data-cmp="${a.sku}" aria-pressed="${CMP_SET.has(a.sku)}">${CMP_SET.has(a.sku)?'\u2713 Comparing':'+ Compare'}</button>
+            <button class="tbtn sm" data-mlib="${a.sku}">+ Library</button>
+            <button class="tbtn sm pri" data-mcart="${a.sku}">+ Cart</button>
+          </div>
+        </div>
+      </div>`).join('')}
+    ${sel.length?`
+      <div class="p-h" style="font-size:14px;margin:22px 0 10px">Compare <span class="muted" style="font-weight:500;font-size:12px">\u00b7 your part vs ${sel.length} selected</span></div>
+      <table class="cmp"><thead><tr><th></th>
+        <th>Your part<br><span class="mono" style="font-size:9px;text-transform:none">${input}</span></th>
+        ${sel.map(a=>`<th>${starIf(a.brand)}${a.brand}<br><span class="mono" style="font-size:9px;text-transform:none">${a.sku}</span> <button class="cmp-x" data-cmp="${a.sku}" aria-label="Remove ${a.brand} from compare">\u2715</button></th>`).join('')}
+      </tr></thead><tbody>
+        <tr><td>Price</td><td class="mono">${money(THEIRS.price)}</td>${sel.map(a=>`<td class="mono"><b>${money(a.price)}</b>${a.price<THEIRS.price?`<br><span class="savechip">\u2212${money(THEIRS.price-a.price)}</span>`:''}</td>`).join('')}</tr>
+        <tr><td>Lead</td><td>${THEIRS.lead}</td>${sel.map(a=>`<td class="stock-ok">${a.lead}</td>`).join('')}</tr>
+        <tr><td>Diameter</td><td>${THEIRS.dia}"</td>${sel.map(a=>`<td>${a.dia}" ${specMark(a.dia===THEIRS.dia)}</td>`).join('')}</tr>
+        <tr><td>Flutes</td><td>${THEIRS.fl}</td>${sel.map(a=>`<td>${a.fl} ${specMark(a.fl===THEIRS.fl)}</td>`).join('')}</tr>
+        <tr><td>LOC</td><td>${THEIRS.loc}"</td>${sel.map(a=>`<td>${a.loc}" ${specMark(a.loc===THEIRS.loc)}</td>`).join('')}</tr>
+        <tr><td>Coating</td><td>${THEIRS.coat}</td>${sel.map(a=>`<td>${a.coat} ${specMark(a.coat===THEIRS.coat)}</td>`).join('')}</tr>
+        <tr><td>Fit</td><td class="muted">\u2014</td>${sel.map(a=>`<td><span class="fitpct">${a.fit}%</span></td>`).join('')}</tr>
+        <tr><td></td><td></td>${sel.map(a=>`<td><button class="tbtn sm pri" data-mcart="${a.sku}">+ Cart</button></td>`).join('')}</tr>
+      </tbody></table>`:''}
+    <p class="brandnote">Preferred brands rank every alternative \u2014 adjust them above the search box.</p>
     ${MATCH_HIST.length>1?`<div class="p-h" style="font-size:13px;margin-top:18px">Recent matches</div>
       ${MATCH_HIST.filter(h=>h!==input).map(h=>`<button class="altrow" data-hist="${h}">
-        <span class="mono">${h}</span><span class="rr-p muted" style="font-weight:500;font-size:11px">re-run &rsaquo;</span></button>`).join('')}`:''}`;
-  $('#mLib').addEventListener('click',()=>addLib({...M,preset:'ISO N preset · material-matched'}));
-  $('#mCart').addEventListener('click',()=>addCart(M));
-  $$('#matchOut [data-alt]').forEach(b=>b.addEventListener('click',()=>{
-    matchPick = [MATCH_PRIMARY,...MATCH_ALTS].find(a=>a.sku===b.dataset.alt); renderMatch(); toast('Promoted to primary match');
-  }));
-  $('#mEdit').addEventListener('click',()=>{ showTab('find'); state.wiz.step=2; renderWiz(); });
+        <span class="mono">${h}</span><span class="rr-p muted" style="font-weight:500;font-size:11px">re-run \u203a</span></button>`).join('')}`:''}`;
+  const bySku = s=>MATCH_ALTS.find(a=>a.sku===s);
+  $$('#matchOut [data-cmp]').forEach(b=>b.addEventListener('click',()=>{
+    const s=b.dataset.cmp; CMP_SET.has(s)?CMP_SET.delete(s):CMP_SET.add(s); renderMatch(); }));
+  $$('#matchOut [data-mlib]').forEach(b=>b.addEventListener('click',()=>addLib({...bySku(b.dataset.mlib),preset:'material-matched preset'})));
+  $$('#matchOut [data-mcart]').forEach(b=>b.addEventListener('click',()=>addCart(bySku(b.dataset.mcart))));
   $$('#matchOut [data-hist]').forEach(b=>b.addEventListener('click',()=>{
-    $('#matchIn').value=b.dataset.hist; matchPick=MATCH_PRIMARY; renderMatch(); }));
+    $('#matchIn').value=b.dataset.hist; renderMatch(); }));
 }
-$('#matchGo').addEventListener('click',()=>{ matchPick=MATCH_PRIMARY; renderMatch(); });
+$('#matchGo').addEventListener('click',renderMatch);
 
 /* ---------- CRIB ---------- */
 function renderCribSel(){
@@ -535,4 +594,4 @@ $('#gGo').addEventListener('click',gGoRun);
 gS.addEventListener('keydown',e=>{ if(e.key==='Enter') gGoRun(); });
 
 /* ---------- init ---------- */
-renderWiz(); renderCribSel(); renderCrib(); renderLib(); renderCart(); renderBar();
+renderWiz(); renderBrandBars(); renderCribSel(); renderCrib(); renderLib(); renderCart(); renderBar();
