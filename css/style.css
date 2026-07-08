@@ -385,3 +385,7 @@ button.thumb:hover,button.thumb-sm:hover{box-shadow:0 0 0 2px var(--b200)}
 /* hidden attribute must always win over display rules */
 .pdp-overlay[hidden]{display:none}
 [hidden]{display:none!important}
+
+/* honest price-increase chips */
+.upchip{display:inline-flex;align-items:center;height:20px;padding:0 10px;border-radius:999px;background:var(--amber-bg);color:var(--amber);font-size:10.5px;font-weight:700;white-space:nowrap;margin-left:6px}
+.r-up{color:#F0C36D;font-family:var(--mono);font-weight:700}

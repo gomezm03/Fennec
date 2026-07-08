@@ -92,7 +92,7 @@ const CRIBS = [
   ]},
 ];
 
-const XM = [
+const XM_SAMPLE = [
   {theirs:'CM-2F340-0500', tname:'OEM 1/2" 4FL end mill', tprice:89.40, on:true, pick:0,
    alts:[{brand:'Accupro',sku:'09990412',fit:96,price:84.12},{brand:'Hertel',sku:'09990627',fit:93,price:61.30}]},
   {theirs:'CM-1P330-0250', tname:'OEM 1/4" 3FL end mill', tprice:64.15, on:true, pick:0,
@@ -103,6 +103,21 @@ const XM = [
    alts:[{brand:'Niagara',sku:'09991177',fit:92,price:60.30},{brand:'Accupro',sku:'09990619',fit:90,price:78.12}]},
   {theirs:'CUSTOM-GRIND-77', tname:'Custom form tool (shop grind)', tprice:null, unmatched:true},
 ];
+/* Fusion document library: supplier/generic tools someone specced in, to be re-specced with MSC */
+const XM_FUSION = [
+  {theirs:'T1 \u00b7 GEN-EM-500-4F', tname:'Generic 1/2" 4FL end mill \u00b7 doc tool', tprice:96.00, on:true, pick:0,
+   alts:[{brand:'Accupro',sku:'09990412',fit:97,price:84.12},{brand:'Hertel',sku:'09990627',fit:94,price:61.30}]},
+  {theirs:'T2 \u00b7 SUP-BN-375', tname:'Supplier 3/8" ball nose \u00b7 doc tool', tprice:44.10, on:true, pick:0,
+   alts:[{brand:'Accupro',sku:'09990840',fit:95,price:47.75}]},
+  {theirs:'T3 \u00b7 GEN-DR-201', tname:'Generic #7 drill \u00b7 doc tool', tprice:61.75, on:true, pick:0,
+   alts:[{brand:'Hertel',sku:'09990118',fit:96,price:38.91},{brand:'OSG',sku:'09990904',fit:92,price:52.10}]},
+  {theirs:'T4 \u00b7 SUP-CH-90', tname:'Supplier 90\u00b0 chamfer mill \u00b7 doc tool', tprice:71.30, on:true, pick:0,
+   alts:[{brand:'Accupro',sku:'09990233',fit:93,price:54.20}]},
+  {theirs:'T5 \u00b7 GEN-EM-750-R', tname:'Generic 3/4" rougher \u00b7 doc tool', tprice:104.50, on:true, pick:0,
+   alts:[{brand:'Niagara',sku:'09991177',fit:91,price:60.30},{brand:'Accupro',sku:'09990619',fit:90,price:78.12}]},
+  {theirs:'T6 \u00b7 CUSTOM-FORM-12', tname:'Custom form tool \u00b7 doc tool', tprice:null, unmatched:true},
+];
+let XM = XM_SAMPLE;
 
 /* ---------- toast / cart bar / tabs ---------- */
 let toastT;
@@ -318,7 +333,8 @@ function renderResults(sku){
     if(state.seen>0){
       more += MORE.slice(0,state.seen).map(([b,s,n,p])=>`
         <div class="rowres">${starIf(b)}<button class="pdp-link" data-pdp="${s}"><b>${b}</b> ${n}</button> <span class="mono">${s}</span><span class="rr-p">${money(p)}</span>
-        <button class="tbtn sm" data-cartm="${s}|${b} ${n}|${p}">+ Cart</button></div>`).join('');
+        <button class="tbtn sm" data-libm="${s}">+ Library</button>
+        <button class="tbtn sm pri" data-cartm="${s}">+ Cart</button></div>`).join('');
     }
     more += state.seen < MORE.length
       ? `<button class="seeall" id="seeAll">${state.seen===0?'See all 127 results':'Show 6 more ('+(127-3-state.seen)+' remaining)'}</button>`
@@ -333,7 +349,12 @@ function renderResults(sku){
   $$('#findResults [data-lib]').forEach(b=>b.addEventListener('click',()=>addLib(byS(b.dataset.lib))));
   $$('#findResults [data-cart]').forEach(b=>b.addEventListener('click',()=>addCart(byS(b.dataset.cart))));
   $$('#findResults [data-cartm]').forEach(b=>b.addEventListener('click',()=>{
-    const [s,n,p]=b.dataset.cartm.split('|'); addCart({sku:s,name:n,price:+p});
+    const p=PRODUCTS[b.dataset.cartm];
+    addCart({sku:p.sku,brand:p.brand,name:p.title,price:p.price});
+  }));
+  $$('#findResults [data-libm]').forEach(b=>b.addEventListener('click',()=>{
+    const p=PRODUCTS[b.dataset.libm];
+    addLib({sku:p.sku,brand:p.brand,name:p.title,price:p.price,preset:`ISO N \u00b7 ${p.params.N.rpm.toLocaleString()} RPM \u00b7 ${p.params.N.ipm} IPM`});
   }));
   const sa=$('#seeAll'); if(sa) sa.addEventListener('click',()=>{state.seen=Math.min(state.seen+6,MORE.length);renderResults();});
 }
@@ -343,6 +364,13 @@ function renderResults(sku){
 const MATCH_HIST = [];
 const CMP_SET = new Set();
 function sortAlts(list){ return [...list].sort((a,b)=>(state.brands.has(b.brand)-state.brands.has(a.brand))||b.fit-a.fit); }
+function pctChip(base, alt){
+  if(!base) return '';
+  const d = Math.round((alt-base)/base*100);
+  if(d<0) return `<span class="savechip">${d}%</span>`;
+  if(d>0) return `<span class="upchip">+${d}%</span>`;
+  return `<span class="savechip">\u00b10%</span>`;
+}
 function specMark(same){ return same ? '<span class="mk-ok">\u2713</span>' : '<span class="mk-close">~</span>'; }
 function renderMatch(){
   const input = $('#matchIn').value.trim()||'CM-2F340-0500-DEMO';
@@ -371,7 +399,7 @@ function renderMatch(){
           <div class="rc-sku">MSC #${a.sku} \u00b7 simulated</div>
           <div class="rc-spec">\u00d8 ${a.dia}" \u00b7 ${a.fl}FL \u00b7 LOC ${a.loc}" \u00b7 ${a.coat}</div>
           <div class="rc-meta"><span class="stock-ok">${a.lead}</span>
-            ${a.price<THEIRS.price?`<span class="savechip">Save ${money(THEIRS.price-a.price)}</span>`:''}</div>
+            ${a.price<THEIRS.price?`<span class="savechip">Save ${money(THEIRS.price-a.price)} \u00b7 ${Math.round((a.price-THEIRS.price)/THEIRS.price*100)}%</span>`:pctChip(THEIRS.price,a.price)}</div>
         </div>
         <div class="rc-side">
           <div><div class="rc-price">${money(a.price)} <small>ea.</small></div>
@@ -498,9 +526,12 @@ function renderXM(){
   const t=xmTotals();
   $('#xmOut').innerHTML = `
     <div class="rollup"><span class="r-lab">Audit</span>
-      <span class="r-big">${t.matched} of 5 matched</span>
+      <span class="r-big">${t.matched} of ${XM.length} matched</span>
+      <span class="r-lab">${t.count} selected</span>
       <span class="r-big">${money(t.msc)} <span style="font-weight:400;color:#9FB4E4">vs ${money(t.theirs)} current brands</span></span>
-      <span class="r-save">save ${money(t.theirs-t.msc)}</span>
+      ${(()=>{ const d=t.theirs-t.msc, p=t.theirs?Math.round(Math.abs(d)/t.theirs*100):0;
+        return d>=0 ? `<span class="r-save">save ${money(d)} (\u2212${p}%)</span>`
+                    : `<span class="r-up">+${money(-d)} (+${p}%)</span>`; })()}
       <span class="r-lab">all next-day</span></div>
     ${XM.map((r,ri)=>r.unmatched
       ? `<div class="xmrow unmatched"><div class="xm-top"><span class="mono xm-theirs">${r.theirs}</span>
@@ -513,9 +544,9 @@ function renderXM(){
          <div class="xm-alts">${r.alts.map((a,ai)=>`
            <label><input type="radio" name="xm${ri}" data-xp="${ri}|${ai}" ${r.pick===ai?'checked':''}>
              ${starIf(a.brand)}<b>${a.brand}</b> <span class="mono" style="font-size:10px">${a.sku}</span>
-             <span class="fitpct">${a.fit}%</span><span class="rr-p">${money(a.price)}</span></label>`).join('')}</div></div>`).join('')}
+             <span class="fitpct">${a.fit}%</span><span class="rr-p">${money(a.price)}</span>${pctChip(r.tprice,a.price)}</label>`).join('')}</div></div>`).join('')}
     <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
-      <button class="tbtn pri" id="xmStage">Stage ${t.count} tool${t.count===1?'':'s'} → Library + cart</button>
+      <button class="tbtn pri" id="xmStage">Add selected to Library + cart</button>
       <span class="stagenote">Nothing is ordered yet — staging is explicit.</span></div>`;
   $$('#xmOut [data-xon]').forEach(cb=>cb.addEventListener('change',()=>{ XM[+cb.dataset.xon].on=cb.checked; renderXM(); }));
   $$('#xmOut [data-xp]').forEach(rb=>rb.addEventListener('change',()=>{ const[ri,ai]=rb.dataset.xp.split('|'); XM[+ri].pick=+ai; renderXM(); }));
@@ -527,11 +558,12 @@ function renderXM(){
     renderBar(); renderCart(); toast('Staged to Library and cart — nothing ordered yet');
   });
 }
-$('#xmGo').addEventListener('click',()=>{ renderXM(); toast('Parsed sample_tools.csv — 4 of 5 lines matched to catalog'); });
+$('#xmGo').addEventListener('click',()=>{ XM = XM_SAMPLE; renderXM(); toast('Parsed sample_tools.csv \u2014 4 of 5 lines matched'); });
+$('#xmFusion').addEventListener('click',()=>{ XM = XM_FUSION; renderXM(); toast("Read this document's Fusion tool library \u2014 5 of 6 tools matched"); });
 const xmFile=$('#xmFile');
 if(xmFile) xmFile.addEventListener('change',e=>{
   const n = e.target.files && e.target.files[0] ? e.target.files[0].name : 'file';
-  renderXM(); toast('Parsed '+n+' — 4 of 5 lines matched to catalog (simulated)');
+  XM = XM_SAMPLE; renderXM(); toast('Parsed '+n+' — 4 of 5 lines matched to catalog (simulated)');
 });
 const xmDrop=$('#xmDrop');
 if(xmDrop){
@@ -539,7 +571,7 @@ if(xmDrop){
   xmDrop.addEventListener('dragleave',()=>{xmDrop.style.background='';});
   xmDrop.addEventListener('drop',e=>{ e.preventDefault(); xmDrop.style.background='';
     const n = e.dataTransfer.files && e.dataTransfer.files[0] ? e.dataTransfer.files[0].name : 'dropped file';
-    renderXM(); toast('Parsed '+n+' — 4 of 5 lines matched to catalog (simulated)'); });
+    XM = XM_SAMPLE; renderXM(); toast('Parsed '+n+' — 4 of 5 lines matched to catalog (simulated)'); });
 }
 
 /* ---------- CART ---------- */
