@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSC Tools for Fusion 360 — Concept Prototype</title>
+<meta name="description" content="Concept prototype: MSC catalog, cross-reference and crib intelligence docked inside Fusion 360's Manufacture workspace. All data is simulated.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="sitehead">
+  <div class="wrap">
+    <div class="wordmark">MSC Tools<span class="cursorbar" aria-hidden="true"></span><small>for Fusion 360 · Concept</small></div>
+    <nav class="sitenav" aria-label="Sections">
+      <a href="#prototype">Prototype</a>
+      <a href="#context">How it knows</a>
+      <a href="#tour">Guided tour</a>
+      <a href="#scope">Scope</a>
+    </nav>
+    <span class="demopill" title="All SKUs, prices, accounts and part numbers are fictional">SIMULATED DATA</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1 class="disp"><span class="thin">Docked in the Manufacture workspace</span>The add-in already knows the job.</h1>
+      <p class="lede">MSC Tools puts catalog search, cross-reference intelligence, and shop-crib inventory inside Fusion 360 — where tooling decisions are actually made. Material comes from the model. Operation comes from the setup. Dimensions come from the selected feature. Guided selection collapses from a long form into a few confirmations.</p>
+      <div class="cta-row">
+        <a class="btn btn-solid" href="#prototype">Open the live prototype</a>
+        <a class="btn btn-ghost" href="#tour">Follow the guided tour</a>
+      </div>
+    </div>
+    <aside class="hero-spec" aria-label="Concept at a glance">
+      <h3>Concept at a glance</h3>
+      <dl>
+        <dt>Form</dt><dd>Docked panel, one toolbar button, five tabs</dd>
+        <dt>Reads</dt><dd>Workpiece material · CAM setup · selected feature · machine limits</dd>
+        <dt>Stages</dt><dd>A theoretical cart and a CAM tool library — nothing is bought or written until you say so</dd>
+        <dt>Data</dt><dd class="mono" style="font-size:11px">100% simulated for this prototype</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<section class="block" id="prototype">
+  <div class="wrap">
+    <p class="eyebrow">Live prototype</p>
+    <h2 class="disp">One panel, five tabs, two destinations</h2>
+    <p class="intro">Everything below is interactive. Every path converges on the <b>staging cart</b> (commerce) or <b>My Library</b> (CAM tool data). SKUs, part numbers, prices, and the account are fictional stand-ins in real formats.</p>
+
+    <div class="fusion-frame">
+      <div class="fusion-bar" aria-hidden="true">
+        <span class="fdot"></span><span class="fdot"></span><span class="fdot"></span>
+        <span>Autodesk Fusion 360 — Manufacture › Setup1 › [2D Pocket] Pocket_3 · workpiece: AL 6061-T6 (simulated viewport)</span>
+      </div>
+
+      <div class="panel" id="panel">
+        <div class="p-head">
+          <div>
+            <div class="p-logo">MSC Tools<span class="cursorbar" style="height:.8em" aria-hidden="true"></span></div>
+            <div class="p-sub">Built to make you better</div>
+          </div>
+          <div class="p-acct">Acct #0000-DEMO<br>Bay 2 crib <b>✓ connected</b></div>
+        </div>
+
+        <div class="p-tabs" role="tablist" aria-label="Panel tabs">
+          <button class="p-tab" role="tab" aria-selected="true" data-tab="find">Find</button>
+          <button class="p-tab" role="tab" aria-selected="false" data-tab="match">Match</button>
+          <button class="p-tab" role="tab" aria-selected="false" data-tab="crib">Crib</button>
+          <button class="p-tab" role="tab" aria-selected="false" data-tab="library">Library<span class="bdg" id="libBadge"></span></button>
+          <button class="p-tab" role="tab" aria-selected="false" data-tab="cart">Cart<span class="bdg" id="cartBadge"></span></button>
+        </div>
+
+        <div class="p-body">
+
+          <!-- ============ FIND ============ -->
+          <div class="p-view on" id="view-find">
+            <div id="wizard">
+              <div class="steprail" id="steprail"></div>
+              <div id="wizStep"></div>
+              <div class="wiz-foot">
+                <button class="tbtn" id="wizBack">Back</button>
+                <span class="spacer"></span>
+                <button class="tbtn pri" id="wizNext">Next</button>
+              </div>
+              <div class="skubox">
+                <label for="skuIn">Know the part? Skip the steps.</label>
+                <input id="skuIn" placeholder="MSC SKU · e.g. 09990412" aria-label="MSC SKU">
+                <button class="tbtn sm" id="skuGo">Look up</button>
+              </div>
+            </div>
+            <div id="findResults" hidden></div>
+          </div>
+
+          <!-- ============ MATCH ============ -->
+          <div class="p-view" id="view-match">
+            <div class="p-h">Cross-reference</div>
+            <p class="p-note">Paste any competitor part number. MSC Tools identifies the maker and returns the best MSC equivalent — with the evidence.</p>
+            <div class="matchin">
+              <input id="matchIn" value="CM-2F340-0500-DEMO" aria-label="Competitor part number">
+              <button class="tbtn pri" id="matchGo">Match it</button>
+            </div>
+            <div id="matchOut" hidden></div>
+          </div>
+
+          <!-- ============ CRIB ============ -->
+          <div class="p-view" id="view-crib">
+            <div class="p-h">Virtual Crib</div>
+            <p class="p-note">Named shop-inventory profiles — vending machines, cribs, or per-machine kits. Below-minimum lines flag red.</p>
+            <div class="cribhead">
+              <select id="cribSel" aria-label="Crib profile"></select>
+              <button class="tbtn sm" id="cribRename">Rename</button>
+              <button class="tbtn sm" id="cribNew">New profile</button>
+              <span class="spacer" style="flex:1"></span>
+              <button class="tbtn sm" id="cribAdd">Add SKU</button>
+            </div>
+            <div id="cribTbl"></div>
+            <button class="tbtn pri" id="poGo">Generate PO — MSC SKUs only</button>
+            <div id="poOut"></div>
+          </div>
+
+          <!-- ============ LIBRARY ============ -->
+          <div class="p-view" id="view-library">
+            <div class="p-h">My Library</div>
+            <p class="p-note">Every "Add to Library" lands here. One export writes geometry and material-matched feeds/speeds presets into Fusion's tool library.</p>
+            <div id="libList"></div>
+            <div style="display:flex;gap:8px;margin:10px 0 24px">
+              <button class="tbtn pri" id="libExport">Export to CAM</button>
+              <button class="tbtn" id="libToCart">Add all to cart</button>
+            </div>
+            <div class="p-h">Extract &amp; Match</div>
+            <p class="p-note">The reverse direction: read this document's CAM tool library, match every competitor part number to MSC, and price the whole set as a theoretical cart.</p>
+            <div class="xm-drop">Reads the current document's tool library — or drop a <span class="mono">.tools</span> / <span class="mono">.csv</span> here.</div>
+            <button class="tbtn pri" id="xmGo">Audit this document's tooling</button>
+            <div id="xmOut"></div>
+          </div>
+
+          <!-- ============ CART ============ -->
+          <div class="p-view" id="view-cart">
+            <div class="p-h">Staging cart</div>
+            <p class="p-note">A priced what-if. It becomes an order, a quote, or a CAM library only on explicit action.</p>
+            <div id="cartList"></div>
+            <div id="cartExtras"></div>
+          </div>
+
+        </div><!-- /p-body -->
+
+        <div class="p-cartbar">
+          <span class="lab">Staging cart</span>
+          <span class="val" id="barCount">0 items</span>
+          <span class="val" id="barTotal">$0.00</span>
+          <button id="barOpen">Review</button>
+        </div>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div><!-- /panel -->
+    </div>
+  </div>
+</section>
+
+<section class="block alt" id="context">
+  <div class="wrap">
+    <p class="eyebrow">How it knows</p>
+    <h2 class="disp">Read, not typed</h2>
+    <p class="intro">The unfair advantage over standalone tool-selector sites: the add-in sits inside the job. Every auto-filled value is labeled with the <span class="ctx">from model</span> device and remains overridable.</p>
+    <div class="grid-3">
+      <div class="cell"><span class="mono-tag">CAD → material</span><h4>Workpiece material</h4><p>The model's physical material maps to an ISO group. AL 6061-T6 pre-selects <b>N — Non-ferrous</b>; the user can pick any combination, and presets follow the most conservative group selected.</p></div>
+      <div class="cell"><span class="mono-tag">CAM → operation</span><h4>Active setup</h4><p>The operation type comes from the active CAM setup — a 2D Pocket pre-selects <b>end milling</b>. No process dropdown to hunt through.</p></div>
+      <div class="cell"><span class="mono-tag">Geometry → dimensions</span><h4>Selected feature</h4><p>"Read Pocket_3" fills diameter, cut depth, and corner radius from the selected geometry. Machine RPM limits are respected in every preset.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="tour">
+  <div class="wrap">
+    <p class="eyebrow">Guided tour</p>
+    <h2 class="disp">Five moves, in order</h2>
+    <p class="intro">The demo script the prototype was built around. Run it top to bottom in the panel above.</p>
+    <ol class="tour">
+      <li><span class="t-name">Match — the hook</span><p>Paste the pre-filled competitor part number and hit <b>Match it</b>: a 96% Accupro equivalent, spec deltas marked exact or close, <b>$58 cheaper, next-day</b>. Add it to Library and cart.</p></li>
+      <li><span class="t-name">Find — the wizard</span><p>Watch the auto-fill: ISO&nbsp;N from the model, end milling from the setup. Multi-select P+N, pick brands, hit <b>Read Pocket_3</b>, then flip Cards ↔ Compare and expand "See all 127."</p></li>
+      <li><span class="t-name">Library — the money slide</span><p>Run <b>Extract &amp; Match</b> on the document's tooling: 4 of 5 matched, flip an alternate, watch the savings roll-up update live, stage four tools.</p></li>
+      <li><span class="t-name">Crib — the shop</span><p>Switch profiles, note the below-minimum reds, then <b>Generate PO — MSC SKUs only</b>, with non-MSC lines explicitly excluded.</p></li>
+      <li><span class="t-name">Cart — make it real</span><p>Review quantities, honor the crib check ("use crib stock first"), then commit: order, quote, or send everything to the Library instead.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="block alt" id="scope">
+  <div class="wrap">
+    <p class="eyebrow">Prototype scope</p>
+    <h2 class="disp">What's simulated</h2>
+    <div class="grid-3">
+      <div class="cell"><h4>Data</h4><p>No live catalog, pricing, or inventory APIs. Every SKU, part number, price, lead time, and account number on this page is fictional, in realistic formats.</p></div>
+      <div class="cell"><h4>Fusion integration</h4><p>Material read, feature selection, and tool-library write are simulated behaviors. No actual Fusion 360 API calls are made.</p></div>
+      <div class="cell"><h4>Parked</h4><p>Authentication, multi-user crib sync, punchout/e-procurement, and the tool assembly builder (cutter + collet + holder) — designed, and retained as a future tab.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <span><b>MSC Tools for Fusion 360</b> — functional concept prototype · v1 · July 2026</span>
+    <span class="mono" style="font-size:11px">All data simulated. Not affiliated with or endorsed by Autodesk. Concept study for MSC Industrial Supply Co.</span>
+  </div>
+</footer>
+<script src="js/app.js" defer></script>
+</body>
+</html>
