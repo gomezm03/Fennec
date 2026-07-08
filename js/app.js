@@ -287,9 +287,9 @@ function renderResults(sku){
   if(state.view==='cards'||sku){
     body = shown.map((t,i)=>`
       <div class="rescard ${i===0&&!sku?'best':''}">
-        <div class="thumb">${toolArt('endmill', TOOL_COAT[t.sku])}</div>
+        <button class="thumb" data-pdp="${t.sku}" aria-label="View product details">${toolArt('endmill', TOOL_COAT[t.sku])}</button>
         <div>
-          <div class="rc-name">${starIf(t.brand)}${t.brand} — ${t.name}</div>
+          <div class="rc-name">${starIf(t.brand)}<button class="pdp-link" data-pdp="${t.sku}">${t.brand} — ${t.name}</button></div>
           <div class="rc-sku">SKU ${t.sku} · simulated</div>
           <div class="rc-spec">${t.spec}</div>
           <div class="rc-spec mono" style="font-size:10.5px;margin-top:3px">${t.preset}</div>
@@ -317,7 +317,7 @@ function renderResults(sku){
   if(!sku){
     if(state.seen>0){
       more += MORE.slice(0,state.seen).map(([b,s,n,p])=>`
-        <div class="rowres">${starIf(b)}<b>${b}</b> ${n} <span class="mono">${s}</span><span class="rr-p">${money(p)}</span>
+        <div class="rowres">${starIf(b)}<button class="pdp-link" data-pdp="${s}"><b>${b}</b> ${n}</button> <span class="mono">${s}</span><span class="rr-p">${money(p)}</span>
         <button class="tbtn sm" data-cartm="${s}|${b} ${n}|${p}">+ Cart</button></div>`).join('');
     }
     more += state.seen < MORE.length
@@ -365,9 +365,9 @@ function renderMatch(){
     <div class="p-h" style="font-size:14px;margin:20px 0 10px">${alts.length} MSC alternatives <span class="muted" style="font-weight:500;font-size:12px">\u00b7 ranked by fit \u00b7 select any to compare</span></div>
     ${alts.map(a=>`
       <div class="rescard">
-        <div class="thumb">${toolArt('endmill', TOOL_COAT[a.sku])}</div>
+        <button class="thumb" data-pdp="${a.sku}" aria-label="View product details">${toolArt('endmill', TOOL_COAT[a.sku])}</button>
         <div>
-          <div class="rc-name">${starIf(a.brand)}${a.brand} \u2014 ${a.name}</div>
+          <div class="rc-name">${starIf(a.brand)}<button class="pdp-link" data-pdp="${a.sku}">${a.brand} \u2014 ${a.name}</button></div>
           <div class="rc-sku">MSC #${a.sku} \u00b7 simulated</div>
           <div class="rc-spec">\u00d8 ${a.dia}" \u00b7 ${a.fl}FL \u00b7 LOC ${a.loc}" \u00b7 ${a.coat}</div>
           <div class="rc-meta"><span class="stock-ok">${a.lead}</span>
@@ -433,7 +433,7 @@ function renderCrib(){
   <table class="cribtbl"><thead><tr>
       <th>SKU</th><th>Item</th><th>On hand</th><th>Min</th><th>Source</th><th></th></tr></thead><tbody>
     ${rows.length?rows.map(({l,i})=>`<tr class="${l.on<l.min?'low':''}">
-      <td class="mono" style="font-size:10.5px">${l.sku}</td><td>${l.name}</td>
+      <td class="mono" style="font-size:10.5px">${l.msc?`<button class="pdp-link" data-pdp="${l.sku}">${l.sku}</button>`:l.sku}</td><td>${l.name}</td>
       <td><span class="stepper"><button data-cq="${i}|-1" aria-label="decrease">−</button><span>${l.on}</span><button data-cq="${i}|1" aria-label="increase">+</button></span></td>
       <td class="mono">${l.min}</td>
       <td><span class="srcbadge ${l.msc?'msc':''}">${l.msc?'MSC':'OTHER'}</span></td>
@@ -480,7 +480,7 @@ $('#poGo').addEventListener('click',()=>{
 /* ---------- LIBRARY + Extract & Match ---------- */
 function renderLib(){
   $('#libList').innerHTML = state.lib.length
-    ? state.lib.map(l=>`<div class="libitem"><div class="thumb-sm">${toolArt('endmill', TOOL_COAT[l.sku]||'altin')}</div><div><b>${l.name}</b><span class="li-preset">SKU ${l.sku} · ${l.preset}</span></div><span class="rr-p">${money(l.price)}</span></div>`).join('')
+    ? state.lib.map(l=>`<div class="libitem"><button class="thumb-sm" data-pdp="${l.sku}">${toolArt('endmill', TOOL_COAT[l.sku]||'altin')}</button><div><button class="pdp-link" data-pdp="${l.sku}"><b>${l.name}</b></button><span class="li-preset">SKU ${l.sku} · ${l.preset}</span></div><span class="rr-p">${money(l.price)}</span></div>`).join('')
     : '<div class="emptybox">Nothing staged yet. Add tools from Find, Match, or an Extract &amp; Match audit — then export them all to Fusion in one move.</div>';
   $('#libExport').disabled = $('#libToCart').disabled = !state.lib.length;
 }
@@ -550,7 +550,7 @@ function renderCart(){
     <div class="cartline">
       <div class="thumb-sm">${toolArt('endmill', TOOL_COAT[l.sku]||'bright')}</div>
       <span class="stepper"><button data-q="${i}|-1" aria-label="decrease">−</button><span>${l.qty}</span><button data-q="${i}|1" aria-label="increase">+</button></span>
-      <div><b>${l.name}</b><br><span class="mono muted" style="font-size:10px">SKU ${l.sku}</span></div>
+      <div><button class="pdp-link" data-pdp="${l.sku}"><b>${l.name}</b></button><br><span class="mono muted" style="font-size:10px">MSC #${l.sku}</span></div>
       <span class="rr-p">${money(l.price*l.qty)}</span>
       <button class="tbtn sm" data-x="${i}" aria-label="remove">✕</button>
     </div>`).join('')
@@ -581,6 +581,94 @@ function renderCart(){
   $('#cOrder').addEventListener('click',()=>toast('Handing off to your mscdirect.com account… (simulated — nothing was ordered)'));
   $('#cQuote').addEventListener('click',()=>toast('Saved as quote Q-2026-0708-DEMO (simulated)'));
 }
+
+/* ---------- product registry + in-app PDP ---------- */
+const PRODUCTS = {};
+function regProd(d){
+  const mk = sfm => { const rpm = Math.round(sfm*3.82/d.diaDec/10)*10;
+    const chip = +(0.0008 + d.diaDec*0.0028).toFixed(4);
+    return {sfm, rpm, chip, ipm: Math.round(rpm*(+d.fl)*chip)}; };
+  d.params = { N: mk(d.kind==='drill'?300:900), P: mk(d.kind==='drill'?90:350) };
+  PRODUCTS[d.sku] = d;
+}
+[
+ {sku:'09990412',brand:'Accupro',title:'1/2" 4-Flute Carbide Square End Mill — AlTiN',kind:'endmill',coat:'altin',coatName:'AlTiN',price:84.12,stock:143,lead:'Next day',desc:'3" OAL, 1/2" shank dia, 38° helix, AlTiN coated, single end, centercutting — Series ACC4-SQ',diaDec:.5,dia:'1/2',fl:'4',loc:'1-1/4',locDec:1.25,shank:'1/2',oal:'3',helix:'38°'},
+ {sku:'09990627',brand:'Hertel',title:'1/2" 4-Flute Carbide Square End Mill — TiAlN',kind:'endmill',coat:'tialn',coatName:'TiAlN',price:61.30,stock:88,lead:'Next day',desc:'2-1/2" OAL, 1/2" shank dia, 35° helix, TiAlN coated, single end, centercutting — Series HTL-GP4',diaDec:.5,dia:'1/2',fl:'4',loc:'1',locDec:1.0,shank:'1/2',oal:'2-1/2',helix:'35°'},
+ {sku:'09990981',brand:'OSG',title:'1/2" 5-Flute Carbide End Mill — Bright',kind:'endmill',coat:'bright',coatName:'Bright/Uncoated',price:97.45,stock:12,lead:'2-day',desc:'3" OAL, 1/2" shank dia, variable 45° helix, .015" corner radius, single end — Series VGM5',diaDec:.5,dia:'1/2',fl:'5',loc:'1-1/4',locDec:1.25,shank:'1/2',oal:'3',helix:'45° variable'},
+ {sku:'09991172',brand:'Niagara',title:'1/2" 4-Flute Square End Mill — TiCN',kind:'endmill',coat:'ticn',coatName:'TiCN',price:71.88,stock:51,lead:'Next day',desc:'3" OAL, 1/2" shank dia, 30° helix, TiCN coated, single end, centercutting — Series N85907',diaDec:.5,dia:'1/2',fl:'4',loc:'1-1/4',locDec:1.25,shank:'1/2',oal:'3',helix:'30°'},
+ {sku:'09990455',brand:'Accupro',title:'1/4" 3-Flute Carbide End Mill — AlTiN',kind:'endmill',coat:'altin',coatName:'AlTiN',price:41.05,stock:210,lead:'Next day',desc:'2-1/2" OAL, 1/4" shank dia, 40° helix, aluminum-spec geometry, single end — Series ACC3-AL',diaDec:.25,dia:'1/4',fl:'3',loc:'3/4',locDec:.75,shank:'1/4',oal:'2-1/2',helix:'40°'},
+ {sku:'09990118',brand:'Hertel',title:'#7 (.201") Carbide Jobber Drill — TiN',kind:'drill',coat:'tin',coatName:'TiN',price:38.91,stock:96,lead:'Next day',desc:'3.6" OAL, 118° point, right hand spiral flute, TiN coated — Series HTL-JD',diaDec:.201,dia:'#7 (.201)',fl:'2',loc:'2.16 flute',locDec:2.16,shank:'.201',oal:'3.6',helix:'118° point'},
+ {sku:'09990904',brand:'OSG',title:'#7 (.201") Carbide Drill — Bright',kind:'drill',coat:'bright',coatName:'Bright/Uncoated',price:52.10,stock:33,lead:'Next day',desc:'3.5" OAL, 140° point, coolant-through, right hand spiral — Series EXO-DRL',diaDec:.201,dia:'#7 (.201)',fl:'2',loc:'2.0 flute',locDec:2.0,shank:'.201',oal:'3.5',helix:'140° point'},
+ {sku:'09991177',brand:'Niagara',title:'3/4" 4-Flute Carbide Rougher — TiCN',kind:'endmill',coat:'ticn',coatName:'TiCN',price:60.30,stock:27,lead:'Next day',desc:'4" OAL, 3/4" shank dia, corncob chipbreaker profile, single end — Series NRC4',diaDec:.75,dia:'3/4',fl:'4',loc:'1-1/2',locDec:1.5,shank:'3/4',oal:'4',helix:'35°'},
+ {sku:'09990619',brand:'Accupro',title:'3/4" 4-Flute Carbide End Mill — AlTiN',kind:'endmill',coat:'altin',coatName:'AlTiN',price:78.12,stock:44,lead:'Next day',desc:'4" OAL, 3/4" shank dia, 38° helix, AlTiN coated, single end, centercutting — Series ACC4-SQ',diaDec:.75,dia:'3/4',fl:'4',loc:'1-1/2',locDec:1.5,shank:'3/4',oal:'4',helix:'38°'},
+ {sku:'09990101',brand:'Hertel',title:'1/4" Jobber Length Drill — TiN',kind:'drill',coat:'tin',coatName:'TiN',price:12.40,stock:340,lead:'Next day',desc:'4" OAL, 118° point, right hand spiral flute, TiN coated HSS — Series HTL-JD',diaDec:.25,dia:'1/4',fl:'2',loc:'2.75 flute',locDec:2.75,shank:'1/4',oal:'4',helix:'118° point'},
+ {sku:'09990233',brand:'Accupro',title:'90° 4-Flute Carbide Chamfer Mill — AlTiN',kind:'chamfer',coat:'altin',coatName:'AlTiN',price:54.20,stock:58,lead:'Next day',desc:'2-1/2" OAL, 1/2" shank dia, 90° included angle, AlTiN coated — Series ACC-CHM',diaDec:.5,dia:'1/2',fl:'4',loc:'1/4',locDec:.25,shank:'1/2',oal:'2-1/2',helix:'90° incl.'},
+ {sku:'09990840',brand:'Accupro',title:'3/8" 2-Flute Carbide Ball End Mill — AlTiN',kind:'ball',coat:'altin',coatName:'AlTiN',price:47.75,stock:71,lead:'Next day',desc:'2-1/2" OAL, 3/8" shank dia, 30° helix, ball nose, AlTiN coated, single end — Series ACC2-BN',diaDec:.375,dia:'3/8',fl:'2',loc:'1',locDec:1.0,shank:'3/8',oal:'2-1/2',helix:'30°'}
+].forEach(regProd);
+MORE.forEach(([b,s,n,p])=>{ if(PRODUCTS[s]) return;
+  const fl=(n.match(/(\d)FL/)||[0,'4'])[1];
+  regProd({sku:s,brand:b,title:n,kind:'endmill',coat:TOOL_COAT[s]||'bright',
+    coatName:(n.split('— ')[1]||'Bright/Uncoated'),price:p,stock:20+(+s.slice(-2)),lead:'Next day',
+    desc:'3" OAL, 1/2" shank dia, solid carbide, single end — simulated catalog item',
+    diaDec:.5,dia:'1/2',fl,loc:'1-1/4',locDec:1.25,shank:'1/2',oal:'3',helix:'38°'}); });
+
+function openPDP(sku){
+  const p = PRODUCTS[sku];
+  if(!p){ toast('No catalog page for '+sku+' in this demo'); return; }
+  let qty = 1;
+  const crib = CRIBS[0].lines.find(l=>l.sku===sku);
+  const row = (k,v)=>`<div class="spec-row"><span>${k}</span><b>${v}</b></div>`;
+  const draw = ()=>{
+    $('#pdpBody').innerHTML = `
+    <div class="pdp-top">
+      <div class="pdp-img">${toolArt(p.kind, p.coat)}</div>
+      <div class="pdp-info">
+        <div class="pdp-brand">${p.brand}</div>
+        <h2 class="pdp-title">${p.title}</h2>
+        <p class="pdp-desc">${p.desc} (simulated)</p>
+        <div class="pdp-ids mono">MSC #${p.sku} \u00b7 Mfr #${p.sku}-D</div>
+        <div class="rc-meta"><span class="stock-ok">\u2713 ${p.stock} in stock</span><span class="muted">${p.lead}</span>${crib?`<span class="stock-crib">${crib.on} in your crib</span>`:''}</div>
+      </div>
+      <div class="pdp-buy">
+        <div class="pdp-price">${money(p.price)} <small>/each</small></div>
+        <div class="pdp-qty"><span>Quantity</span>
+          <span class="stepper"><button id="pqDn" aria-label="decrease">\u2212</button><span>${qty}</span><button id="pqUp" aria-label="increase">+</button></span></div>
+        <button class="tbtn pri" id="pAddCart" style="width:100%;justify-content:center">Add to cart</button>
+        <button class="tbtn" id="pAddLib" style="width:100%;justify-content:center">Add to Library</button>
+        <div class="pdp-ship">FREE next-day \u00b7 order by 8 p.m. ET</div>
+      </div>
+    </div>
+    <h3 class="pdp-h">Specifications</h3>
+    <div class="specgrid">
+      ${row('Cut Diameter (Inch)', p.dia+'"')}${row('Cut Diameter (Decimal)', p.diaDec.toFixed(4))}
+      ${row('Number of Flutes', p.fl)}${row('Material', 'Solid Carbide')}
+      ${row('Length of Cut (Inch)', p.loc+'"')}${row('Length of Cut (Decimal)', p.locDec.toFixed(4))}
+      ${row('Shank Diameter', p.shank+'"')}${row('Overall Length', p.oal+'"')}
+      ${row('Coating / Finish', p.coatName)}${row(p.kind==='drill'?'Point Angle':'Helix Angle', p.helix)}
+      ${row('Centercutting', p.kind==='drill'?'\u2014':'Yes')}${row('Cutting Direction', 'Right Hand')}
+    </div>
+    <h3 class="pdp-h">Feeds &amp; speeds presets <span class="muted" style="font-weight:500;font-size:11px">\u00b7 starting parameters, exported with the tool \u00b7 simulated</span></h3>
+    <table class="cmp"><thead><tr><th>Workpiece</th><th>SFM</th><th>Spindle</th><th>Chip load</th><th>Feed</th></tr></thead><tbody>
+      <tr><td>ISO N \u2014 Aluminum</td><td class="mono">${p.params.N.sfm}</td><td class="mono">${p.params.N.rpm.toLocaleString()} RPM</td><td class="mono">${p.params.N.chip}"</td><td class="mono">${p.params.N.ipm} IPM</td></tr>
+      <tr><td>ISO P \u2014 Steel</td><td class="mono">${p.params.P.sfm}</td><td class="mono">${p.params.P.rpm.toLocaleString()} RPM</td><td class="mono">${p.params.P.chip}"</td><td class="mono">${p.params.P.ipm} IPM</td></tr>
+    </tbody></table>
+    <div class="pdp-cad"><span>Tool geometry &amp; CAM data</span>
+      <button class="tbtn sm" id="pDl">Download .tools \u00b7 simulated</button></div>`;
+    $('#pqUp').addEventListener('click',()=>{qty++;draw();});
+    $('#pqDn').addEventListener('click',()=>{qty=Math.max(1,qty-1);draw();});
+    $('#pAddCart').addEventListener('click',()=>addCart({sku:p.sku,brand:p.brand,name:p.title,price:p.price},qty));
+    $('#pAddLib').addEventListener('click',()=>addLib({sku:p.sku,brand:p.brand,name:p.title,price:p.price,preset:`ISO N \u00b7 ${p.params.N.rpm.toLocaleString()} RPM \u00b7 ${p.params.N.ipm} IPM`}));
+    $('#pDl').addEventListener('click',()=>toast('Downloaded '+p.sku+'.tools \u2014 geometry + presets (simulated)'));
+  };
+  draw();
+  $('#pdpOv').hidden = false;
+  $('#pdpClose').focus();
+}
+function closePDP(){ $('#pdpOv').hidden = true; }
+$('#pdpClose').addEventListener('click', closePDP);
+$('#pdpOv').addEventListener('click', e=>{ if(e.target===$('#pdpOv')) closePDP(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#pdpOv').hidden) closePDP(); });
+document.addEventListener('click', e=>{ const t = e.target.closest('[data-pdp]'); if(t) openPDP(t.dataset.pdp); });
 
 /* ---------- global search ---------- */
 const gS=$('#gSearch');
