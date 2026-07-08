@@ -6,8 +6,9 @@ const state = {
   cart: [],            // {sku,name,price,qty}
   lib: [],             // {sku,name,price,preset}
   brands: new Set(['Accupro','Hertel']),
-  wiz: { step:0, mats:new Set(['N']), matAuto:true, proc:'End milling', procAuto:true,
-         dia:'', loc:'', rad:'', holder:'CAT40 · ER32', read:false },
+  wiz: { step:0, mats:new Set(), proc:'End milling',
+         dia:'', loc:'', rad:'', holder:'CAT40 · ER32' },
+  sort:'fit',
   seen: 0,             // expanded rows in "see all"
   view: 'cards',
   cribSel: 0,
@@ -179,20 +180,17 @@ function renderWiz(){
         <button class="iso" data-iso="${L}" aria-pressed="${w.mats.has(L)}">
           <span class="iso-letter" style="background:${c};${L==='M'?'color:#3d3200':''}">${L}</span>
           <span class="iso-name">${n}</span><span class="iso-sub">${sub}</span>
-          ${L==='N'&&w.matAuto?'<span class="ctx">from model · AL 6061</span>':''}
         </button>`).join('')}</div>`;
     $$('[data-iso]').forEach(b=>b.addEventListener('click',()=>{
-      const L=b.dataset.iso; w.mats.has(L)?w.mats.delete(L):w.mats.add(L);
-      if(L==='N') w.matAuto=false; renderWiz();
+      const L=b.dataset.iso; w.mats.has(L)?w.mats.delete(L):w.mats.add(L); renderWiz();
     }));
   }
   if(w.step===1){
     el.innerHTML = `<div class="p-h">Process</div>
-      <p class="p-note">Detected from the active CAM setup — override freely.</p>
+      <p class="p-note">What operation are you tooling for?</p>
       <div class="optrow">${PROCS.map(p=>`
-        <button class="chip" data-proc="${p}" aria-pressed="${w.proc===p}">${p}</button>`).join('')}</div>
-      ${w.proc==='End milling'&&w.procAuto?'<span class="ctx">from setup · 2D Pocket → Pocket_3</span>':''}`;
-    $$('[data-proc]').forEach(b=>b.addEventListener('click',()=>{ w.proc=b.dataset.proc; w.procAuto=(w.proc==='End milling'); renderWiz(); }));
+        <button class="chip" data-proc="${p}" aria-pressed="${w.proc===p}">${p}</button>`).join('')}</div>`;
+    $$('[data-proc]').forEach(b=>b.addEventListener('click',()=>{ w.proc=b.dataset.proc; renderWiz(); }));
   }
   if(w.step===2){
     el.innerHTML = `<div class="p-h">Preferred brands</div>
@@ -209,17 +207,13 @@ function renderWiz(){
   }
   if(w.step===3){
     el.innerHTML = `<div class="p-h">Size &amp; limits</div>
-      <p class="p-note">Or read them straight off the selected feature.</p>
-      <button class="tbtn" id="readFeat">◈ Read Pocket_3</button>
-      ${w.read?'<span class="ctx" style="margin-left:8px">filled from Pocket_3</span>':''}
+      <p class="p-note">Enter the cut you're making — every field is optional.</p>
       <div class="formgrid">
         <div class="fld"><label for="fDia">Diameter (in)</label><input id="fDia" value="${w.dia}" placeholder=".500"></div>
         <div class="fld"><label for="fLoc">Cut depth / LOC (in)</label><input id="fLoc" value="${w.loc}" placeholder="1.25"></div>
         <div class="fld"><label for="fRad">Corner radius (in)</label><input id="fRad" value="${w.rad}" placeholder=".000"></div>
         <div class="fld"><label for="fHold">Holder</label><select id="fHold"><option>CAT40 · ER32</option><option>CAT40 · shrink fit</option><option>BT30 · ER16</option></select></div>
-      </div>
-      <p class="p-note" style="margin-top:2px">Machine limit respected: <span class="mono">Haas VF-2 · 10,000 RPM max</span> <span class="ctx">from machine</span></p>`;
-    $('#readFeat').addEventListener('click',()=>{ w.dia='.500'; w.loc='1.25'; w.rad='.000'; w.read=true; renderWiz(); toast('Read Pocket_3 — Ø .500 × 1.25 deep, sharp corners'); });
+      </div>`;
     ['fDia','fLoc','fRad'].forEach((id,i)=>$('#'+id).addEventListener('input',e=>{ w[['dia','loc','rad'][i]]=e.target.value; renderRail(); }));
   }
   $('#wizBack').disabled = w.step===0;
@@ -230,19 +224,25 @@ $('#wizNext').addEventListener('click',()=>{
   if(state.wiz.step<3){ state.wiz.step++; renderWiz(); }
   else{ if(!state.wiz.dia){ state.wiz.dia='.500'; state.wiz.loc='1.25'; state.wiz.rad='.000'; } state.seen=0; renderResults(); }
 });
-$('#skuGo').addEventListener('click',()=>{
-  const v=$('#skuIn').value.trim()||'09990412'; state.seen=0; renderResults(v);
-});
+
 
 /* ---------- FIND results ---------- */
 function starIf(brand){ return state.brands.has(brand)?'<span class="star" title="Preferred brand">★</span>':''; }
-function sortPref(list){ return [...list].sort((a,b)=>(state.brands.has(b.brand)-state.brands.has(a.brand))||b.fit-a.fit); }
+function sortPref(list){ return [...list].sort((a,b)=>{
+  const p = state.brands.has(b.brand)-state.brands.has(a.brand); if(p) return p;
+  if(state.sort==='price') return a.price-b.price;
+  if(state.sort==='lead') return (b.stock.includes('next-day')-a.stock.includes('next-day')) || b.fit-a.fit;
+  return b.fit-a.fit; }); }
 
 function renderResults(sku){
   $('#wizard').hidden = true; const R=$('#findResults'); R.hidden=false;
   const top = sortPref(TOP3);
   const head = `<div class="res-head">
       <div class="p-h">${sku?`SKU lookup — <span class="mono">${sku}</span>`:'Top 3 of 127 — sorted by fit'}</div>
+      <select class="sortsel" id="sortSel" aria-label="Sort results">
+        <option value="fit" ${state.sort==='fit'?'selected':''}>Sort: Best fit</option>
+        <option value="price" ${state.sort==='price'?'selected':''}>Sort: Lowest price</option>
+        <option value="lead" ${state.sort==='lead'?'selected':''}>Sort: Fastest</option></select>
       <div class="viewtog" role="group" aria-label="Result view">
         <button data-v="cards" aria-pressed="${state.view==='cards'}">Cards</button>
         <button data-v="compare" aria-pressed="${state.view==='compare'}">Compare</button></div>
@@ -263,7 +263,7 @@ function renderResults(sku){
           <div class="rc-meta"><span class="stock-ok">${t.stock}</span>${t.crib?` · <span class="stock-crib">${t.crib} in your crib</span>`:''}</div>
         </div>
         <div class="rc-side">
-          <div><div class="rc-price">${money(t.price)}</div><div class="rc-fitlab"><span class="fitpct">${t.fit}%</span> fit</div></div>
+          <div><div class="rc-price">${money(t.price)} <small>ea.</small></div><div class="rc-fitlab"><span class="fitpct">${t.fit}%</span> fit</div></div>
           <div class="rc-actions"><button class="tbtn sm" data-lib="${t.sku}">+ Library</button><button class="tbtn sm pri" data-cart="${t.sku}">+ Cart</button></div>
         </div>
       </div>`).join('');
@@ -294,6 +294,7 @@ function renderResults(sku){
 
   R.innerHTML = head + body + more;
   $$('#findResults [data-v]').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.v;renderResults();}));
+  const ss=$('#sortSel'); if(ss) ss.addEventListener('change',()=>{state.sort=ss.value;renderResults();});
   $('#newSearch').addEventListener('click',()=>{state.wiz.step=0;renderWiz();});
   const byS = s=>TOP3.find(t=>t.sku===s);
   $$('#findResults [data-lib]').forEach(b=>b.addEventListener('click',()=>addLib(byS(b.dataset.lib))));
@@ -306,8 +307,10 @@ function renderResults(sku){
 
 /* ---------- MATCH ---------- */
 let matchPick = MATCH_PRIMARY;
+const MATCH_HIST = [];
 function renderMatch(){
   const input = $('#matchIn').value.trim()||'CM-2F340-0500-DEMO';
+  if(!MATCH_HIST.includes(input)){ MATCH_HIST.unshift(input); if(MATCH_HIST.length>6) MATCH_HIST.pop(); }
   const M = matchPick, out = $('#matchOut'); out.hidden=false;
   const alts = [MATCH_PRIMARY,...MATCH_ALTS].filter(a=>a.sku!==M.sku);
   const locTheirs='1.25"', locOurs = M.sku==='09990627' ? '1.00"' : '1.25"';
@@ -326,7 +329,7 @@ function renderMatch(){
     <table class="delta"><thead><tr><th>Spec</th><th>Theirs</th><th>MSC match</th><th>Δ</th></tr></thead><tbody>
       <tr><td>Diameter</td><td>.500"</td><td>.500"</td><td class="mk-ok">✓ exact</td></tr>
       <tr><td>Flutes</td><td>4</td><td>4</td><td class="mk-ok">✓ exact</td></tr>
-      <tr><td>LOC</td><td>${locTheirs}</td><td>${locOurs}</td><td class="${locOurs===locTheirs?'mk-ok':'mk-close'}">${locOurs===locTheirs?'✓ exact':'~ close — within tolerance for Pocket_3 (1.25 deep max)'}</td></tr>
+      <tr><td>LOC</td><td>${locTheirs}</td><td>${locOurs}</td><td class="${locOurs===locTheirs?'mk-ok':'mk-close'}">${locOurs===locTheirs?'✓ exact':'~ close — within working tolerance for this class of cut'}</td></tr>
       <tr><td>Coating</td><td>AlTiN</td><td>${M.sku==='09990627'?'TiAlN':M.sku==='09991172'?'TiCN':'AlTiN'}</td><td class="${M.sku==='09990412'?'mk-ok':'mk-close'}">${M.sku==='09990412'?'✓ exact':'~ close — equivalent class for ISO N'}</td></tr>
     </tbody></table>
     <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -335,13 +338,18 @@ function renderMatch(){
     <div class="p-h" style="font-size:12px">Alternates — tap to promote</div>
     ${alts.map(a=>`<button class="altrow" data-alt="${a.sku}">${starIf(a.brand)}<b>${a.brand}</b> ${a.name}
       <span class="mono">${a.sku}</span> <span class="fitpct">${a.fit}%</span><span class="rr-p">${money(a.price)}</span></button>`).join('')}
-    <p class="brandnote">Preferred brands applied — <a id="mEdit">edit in Find</a>.</p>`;
+    <p class="brandnote">Preferred brands applied — <a id="mEdit">edit in Find</a>.</p>
+    ${MATCH_HIST.length>1?`<div class="p-h" style="font-size:13px;margin-top:18px">Recent matches</div>
+      ${MATCH_HIST.filter(h=>h!==input).map(h=>`<button class="altrow" data-hist="${h}">
+        <span class="mono">${h}</span><span class="rr-p muted" style="font-weight:500;font-size:11px">re-run &rsaquo;</span></button>`).join('')}`:''}`;
   $('#mLib').addEventListener('click',()=>addLib({...M,preset:'ISO N preset · material-matched'}));
   $('#mCart').addEventListener('click',()=>addCart(M));
   $$('#matchOut [data-alt]').forEach(b=>b.addEventListener('click',()=>{
     matchPick = [MATCH_PRIMARY,...MATCH_ALTS].find(a=>a.sku===b.dataset.alt); renderMatch(); toast('Promoted to primary match');
   }));
   $('#mEdit').addEventListener('click',()=>{ showTab('find'); state.wiz.step=2; renderWiz(); });
+  $$('#matchOut [data-hist]').forEach(b=>b.addEventListener('click',()=>{
+    $('#matchIn').value=b.dataset.hist; matchPick=MATCH_PRIMARY; renderMatch(); }));
 }
 $('#matchGo').addEventListener('click',()=>{ matchPick=MATCH_PRIMARY; renderMatch(); });
 
@@ -351,18 +359,34 @@ function renderCribSel(){
 }
 function renderCrib(){
   const c = CRIBS[state.cribSel];
-  $('#cribTbl').innerHTML = `<table class="cribtbl"><thead><tr>
+  const q = (state.cribQ||'').toLowerCase();
+  const low = c.lines.filter(l=>l.on<l.min);
+  const cost = low.filter(l=>l.msc).reduce((s,l)=>s+(2*l.min-l.on)*l.price,0);
+  const rows = c.lines.map((l,i)=>({l,i}))
+    .filter(r=>!q || r.l.sku.toLowerCase().includes(q) || r.l.name.toLowerCase().includes(q));
+  $('#cribTbl').innerHTML = `
+  <div class="cribsum">
+    <span class="sumchip">${c.lines.length} SKUs tracked</span>
+    <span class="sumchip ${low.length?'warn':''}">${low.length} below min</span>
+    <span class="sumchip">${money(cost)} to replenish</span>
+    <input id="cribFilter" placeholder="Filter SKUs&hellip;" value="${state.cribQ||''}" aria-label="Filter crib lines">
+  </div>
+  <table class="cribtbl"><thead><tr>
       <th>SKU</th><th>Item</th><th>On hand</th><th>Min</th><th>Source</th><th></th></tr></thead><tbody>
-    ${c.lines.map((l,i)=>`<tr class="${l.on<l.min?'low':''}">
+    ${rows.length?rows.map(({l,i})=>`<tr class="${l.on<l.min?'low':''}">
       <td class="mono" style="font-size:10.5px">${l.sku}</td><td>${l.name}</td>
       <td><span class="stepper"><button data-cq="${i}|-1" aria-label="decrease">−</button><span>${l.on}</span><button data-cq="${i}|1" aria-label="increase">+</button></span></td>
       <td class="mono">${l.min}</td>
       <td><span class="srcbadge ${l.msc?'msc':''}">${l.msc?'MSC':'OTHER'}</span></td>
-      <td>${l.on<l.min?'<span class="lowflag">▼ below min</span>':''}</td></tr>`).join('')}
+      <td>${l.on<l.min?'<span class="lowflag">▼ below min</span>':''}</td></tr>`).join('')
+      :'<tr><td colspan="6" style="text-align:center;color:var(--faint)">No lines match the filter.</td></tr>'}
   </tbody></table>`;
   $$('#cribTbl [data-cq]').forEach(b=>b.addEventListener('click',()=>{
     const [i,d]=b.dataset.cq.split('|'); const l=c.lines[+i]; l.on=Math.max(0,l.on+ +d); renderCrib();
   }));
+  const cf=$('#cribFilter');
+  cf.addEventListener('input',()=>{ state.cribQ=cf.value; renderCrib();
+    const nf=$('#cribFilter'); nf.focus(); nf.setSelectionRange(nf.value.length,nf.value.length); });
 }
 $('#cribSel').addEventListener('change',e=>{ state.cribSel=+e.target.value; $('#poOut').innerHTML=''; renderCrib(); });
 $('#cribRename').addEventListener('click',()=>{
@@ -401,7 +425,8 @@ function renderLib(){
     : '<div class="emptybox">Nothing staged yet. Add tools from Find, Match, or an Extract &amp; Match audit — then export them all to Fusion in one move.</div>';
   $('#libExport').disabled = $('#libToCart').disabled = !state.lib.length;
 }
-$('#libExport').addEventListener('click',()=>toast(`Exported ${state.lib.length} tool${state.lib.length>1?'s':''} to Fusion's tool library — geometry + presets (simulated)`));
+$('#libExport').addEventListener('click',()=>{
+  const f=$('#expFmt'); toast(`Exported ${state.lib.length} tool${state.lib.length>1?'s':''} — ${f?f.value:'CAM'} · geometry + presets (simulated)`); });
 $('#libToCart').addEventListener('click',()=>{ state.lib.forEach(l=>addCart({sku:l.sku,name:l.name,price:l.price})); });
 
 function xmTotals(){
@@ -438,12 +463,25 @@ function renderXM(){
   $$('#xmOut [data-q]').forEach(q=>q.addEventListener('click',()=>toast('Quote requested for '+q.dataset.q+' (simulated)')));
   $('#xmStage').addEventListener('click',()=>{
     XM.forEach(r=>{ if(r.unmatched||!r.on) return; const a=r.alts[r.pick];
-      addLib({brand:a.brand,sku:a.sku,name:'Match for '+r.theirs,price:a.price,preset:'ISO preset · material-matched'});
+      addLib({brand:a.brand,sku:a.sku,name:'Match for '+r.theirs,price:a.price,preset:'material-matched preset'});
       const ex=state.cart.find(l=>l.sku===a.sku); if(!ex) state.cart.push({sku:a.sku,name:a.brand+' — match for '+r.theirs,price:a.price,qty:1}); });
     renderBar(); renderCart(); toast('Staged to Library and cart — nothing ordered yet');
   });
 }
-$('#xmGo').addEventListener('click',renderXM);
+$('#xmGo').addEventListener('click',()=>{ renderXM(); toast('Parsed sample_tools.csv — 4 of 5 lines matched to catalog'); });
+const xmFile=$('#xmFile');
+if(xmFile) xmFile.addEventListener('change',e=>{
+  const n = e.target.files && e.target.files[0] ? e.target.files[0].name : 'file';
+  renderXM(); toast('Parsed '+n+' — 4 of 5 lines matched to catalog (simulated)');
+});
+const xmDrop=$('#xmDrop');
+if(xmDrop){
+  xmDrop.addEventListener('dragover',e=>{e.preventDefault();xmDrop.style.background='var(--b50)';});
+  xmDrop.addEventListener('dragleave',()=>{xmDrop.style.background='';});
+  xmDrop.addEventListener('drop',e=>{ e.preventDefault(); xmDrop.style.background='';
+    const n = e.dataTransfer.files && e.dataTransfer.files[0] ? e.dataTransfer.files[0].name : 'dropped file';
+    renderXM(); toast('Parsed '+n+' — 4 of 5 lines matched to catalog (simulated)'); });
+}
 
 /* ---------- CART ---------- */
 function renderCart(){
@@ -457,12 +495,17 @@ function renderCart(){
       <span class="rr-p">${money(l.price*l.qty)}</span>
       <button class="tbtn sm" data-x="${i}" aria-label="remove">✕</button>
     </div>`).join('')
-    + `<div class="totalrow"><span>Total (simulated pricing)</span><b>${money(cartTotal())}</b></div>`;
+    ;
   const cribHit = state.cart.find(l=>l.sku==='09990412');
   X.innerHTML = `
     ${cribHit?`<div class="callout">◈ <b>Crib check:</b> 2 × SKU 09990412 already on hand in <b>Bay 2 crib</b> — use crib stock first and drop the order quantity?
       <button class="tbtn sm" id="useCrib" style="margin-left:8px">Use crib stock</button></div>`:''}
-    <div class="callout green">Free next-day shipping — order by 8 p.m. ET.</div>
+    <div class="ordsum">
+      <div class="os-row"><span>Subtotal (${state.cart.reduce((s,l)=>s+l.qty,0)} items)</span><b>${money(cartTotal())}</b></div>
+      <div class="os-row"><span>Shipping</span><b class="stock-ok">FREE next-day</b></div>
+      <div class="os-row"><span>Order by 8 p.m. ET &middot; tax calculated at order</span><span></span></div>
+      <div class="os-row os-total"><span>Estimated total</span><b>${money(cartTotal())}</b></div>
+    </div>
     <div class="cart-exits">
       <button class="tbtn" id="cLib">Add all to Library</button>
       <button class="tbtn pri" id="cOrder">Make it real — order</button>
@@ -479,6 +522,17 @@ function renderCart(){
   $('#cOrder').addEventListener('click',()=>toast('Handing off to your mscdirect.com account… (simulated — nothing was ordered)'));
   $('#cQuote').addEventListener('click',()=>toast('Saved as quote Q-2026-0708-DEMO (simulated)'));
 }
+
+/* ---------- global search ---------- */
+const gS=$('#gSearch');
+function gGoRun(){
+  const v=(gS.value||'').trim(); if(!v) return;
+  const sku=v.replace(/[^0-9]/g,'');
+  showTab('find'); state.seen=0;
+  renderResults(sku.length>=4 ? sku : '09990412');
+}
+$('#gGo').addEventListener('click',gGoRun);
+gS.addEventListener('keydown',e=>{ if(e.key==='Enter') gGoRun(); });
 
 /* ---------- init ---------- */
 renderWiz(); renderCribSel(); renderCrib(); renderLib(); renderCart(); renderBar();

@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MSC Tools — Tooling for the job in front of you</title>
-<meta name="description" content="Interactive mock of the MSC Tools application. All data simulated.">
+<title>MSC Tools — Tooling advisor, powered by MSC</title>
+<meta name="description" content="Interactive mock of MSC Tools, a tooling advisor application powered by MSC. All data simulated.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lexend+Exa:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend+Exa:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,12 +17,12 @@
   <header class="p-head">
     <div>
       <div class="p-logo">MSC Tools<span class="cursorbar" aria-hidden="true"></span></div>
-      <div class="p-sub">Built to make you better</div>
+      <div class="p-sub">Tooling advisor</div>
     </div>
-    <div class="jobstrip" aria-label="Job context, read from CAD and CAM">
-      <span class="ctx">AL 6061-T6 &rarr; ISO N</span>
-      <span class="ctx">2D Pocket &middot; Pocket_3</span>
-      <span class="ctx">Haas VF-2 &middot; 10K RPM</span>
+    <div class="gsearch">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+      <input id="gSearch" placeholder="Search by MSC # or keyword&hellip;" aria-label="Search catalog">
+      <button id="gGo">Search</button>
     </div>
     <span class="spacer"></span>
     <div class="p-acct">Acct #0000-DEMO<br>Bay 2 crib <b>&#10003; connected</b></div>
@@ -42,73 +42,81 @@
     <div class="p-body" id="pbody">
 
       <div class="p-view on" id="view-find">
-          <div id="wizard">
-            <div class="steprail" id="steprail"></div>
-            <div id="wizStep"></div>
-            <div class="wiz-foot">
-              <button class="tbtn" id="wizBack">Back</button>
-              <span class="spacer"></span>
-              <button class="tbtn pri" id="wizNext">Next</button>
-            </div>
-            <div class="skubox">
-              <label for="skuIn">Know the part? Skip the steps.</label>
-              <input id="skuIn" placeholder="MSC SKU &#183; e.g. 09990412" aria-label="MSC SKU">
-              <button class="tbtn sm" id="skuGo">Look up</button>
-            </div>
-          </div>
-          <div id="findResults" hidden></div>
-        </div>
-
-        <div class="p-view" id="view-match">
-          <div class="p-h">Cross-reference</div>
-          <p class="p-note">Paste any competitor part number. MSC Tools identifies the maker and returns the best MSC equivalent — with the evidence.</p>
-          <div class="matchin">
-            <input id="matchIn" value="CM-2F340-0500-DEMO" aria-label="Competitor part number">
-            <button class="tbtn pri" id="matchGo">Match it</button>
-          </div>
-          <div id="matchOut" hidden></div>
-        </div>
-
-        <div class="p-view" id="view-crib">
-          <div class="p-h">Virtual Crib</div>
-          <p class="p-note">Named shop-inventory profiles — vending machines, cribs, or per-machine kits. Below-minimum lines flag red.</p>
-          <div class="cribhead">
-            <select id="cribSel" aria-label="Crib profile"></select>
-            <button class="tbtn sm" id="cribRename">Rename</button>
-            <button class="tbtn sm" id="cribNew">New</button>
+        <div id="wizard">
+          <div class="p-h">Find the right tool</div>
+          <p class="p-note">Four quick questions narrow the catalog to the tools that fit your job — with feeds &amp; speeds presets matched to your material.</p>
+          <div class="steprail" id="steprail"></div>
+          <div id="wizStep"></div>
+          <div class="wiz-foot">
+            <button class="tbtn" id="wizBack">Back</button>
             <span class="spacer"></span>
-            <button class="tbtn sm" id="cribAdd">+ Add SKU</button>
+            <button class="tbtn pri" id="wizNext">Next</button>
           </div>
-          <div id="cribTbl"></div>
-          <button class="tbtn pri" id="poGo">Generate PO — MSC SKUs only</button>
-          <div id="poOut"></div>
         </div>
+        <div id="findResults" hidden></div>
+      </div>
 
-        <div class="p-view" id="view-library">
-          <div class="p-h">My Library</div>
-          <p class="p-note">Every "Add to Library" lands here. One export writes geometry and material-matched feeds/speeds presets into Fusion's tool library.</p>
-          <div id="libList"></div>
-          <div style="display:flex;gap:8px;margin:10px 0 24px">
-            <button class="tbtn pri" id="libExport">Export to CAM</button>
-            <button class="tbtn" id="libToCart">Add all to cart</button>
-          </div>
-          <div class="p-h">Extract &amp; Match</div>
-          <p class="p-note">The reverse direction: read this document's CAM tool library, match every competitor part number to MSC, and price the whole set as a theoretical cart.</p>
-          <div class="xm-drop">Reads the current document's tool library — or drop a <span class="mono">.tools</span> / <span class="mono">.csv</span> here.</div>
-          <button class="tbtn pri" id="xmGo">Audit this document's tooling</button>
-          <div id="xmOut"></div>
+      <div class="p-view" id="view-match">
+        <div class="p-h">Cross-reference</div>
+        <p class="p-note">Paste any competitor part number. MSC Tools identifies the maker and returns the best MSC equivalent — with the evidence.</p>
+        <div class="matchin">
+          <input id="matchIn" value="CM-2F340-0500-DEMO" aria-label="Competitor part number">
+          <button class="tbtn pri" id="matchGo">Match it</button>
         </div>
+        <div id="matchOut" hidden></div>
+      </div>
 
-        <div class="p-view" id="view-cart">
-          <div class="p-h">Staging cart</div>
-          <p class="p-note">A priced what-if. It becomes an order, a quote, or a CAM library only on explicit action.</p>
-          <div id="cartList"></div>
-          <div id="cartExtras"></div>
-        </div></div>
+      <div class="p-view" id="view-crib">
+        <div class="p-h">Virtual Crib</div>
+        <p class="p-note">Named shop-inventory profiles — vending machines, cribs, or per-machine kits. Below-minimum lines flag red and drive one-click reorders.</p>
+        <div class="cribhead">
+          <select id="cribSel" aria-label="Crib profile"></select>
+          <button class="tbtn sm" id="cribRename">Rename</button>
+          <button class="tbtn sm" id="cribNew">New</button>
+          <span class="spacer"></span>
+          <button class="tbtn sm" id="cribAdd">+ Add SKU</button>
+        </div>
+        <div id="cribTbl"></div>
+        <button class="tbtn pri" id="poGo">Generate PO — MSC SKUs only</button>
+        <div id="poOut"></div>
+      </div>
+
+      <div class="p-view" id="view-library">
+        <div class="p-h">My Library</div>
+        <p class="p-note">Every "Add to Library" lands here. One export writes tool geometry and material-matched feeds/speeds presets to your CAM system's format.</p>
+        <div id="libList"></div>
+        <div class="exprow">
+          <select id="expFmt" aria-label="Export format">
+            <option>Fusion 360 (.tools)</option>
+            <option>Mastercam (.tooldb)</option>
+            <option>Generic (.csv)</option>
+          </select>
+          <button class="tbtn pri" id="libExport">Export to CAM</button>
+          <button class="tbtn" id="libToCart">Add all to cart</button>
+        </div>
+        <div class="p-h">Import &amp; Match</div>
+        <p class="p-note">Bring your current tooling: import a tool list, match every competitor part number to an MSC equivalent, and price the whole set as a theoretical cart.</p>
+        <div class="xm-drop" id="xmDrop">Drop a tool export here — <b>.csv</b> or <b>.tools</b> — or <label class="filelab">browse files<input type="file" id="xmFile" accept=".csv,.tools" hidden></label></div>
+        <div class="importrow">
+          <button class="tbtn pri" id="xmGo">Load sample tool list</button>
+          <span class="stagenote">sample_tools.csv &middot; 5 lines &middot; nothing is ordered by importing</span>
+        </div>
+        <div id="xmOut"></div>
+      </div>
+
+      <div class="p-view" id="view-cart">
+        <div class="p-h">Staging cart</div>
+        <p class="p-note">A priced what-if. It becomes an order, a quote, or a CAM library only on explicit action.</p>
+        <div id="cartList"></div>
+        <div id="cartExtras"></div>
+      </div>
+
+    </div>
 
   </div>
 
   <div class="p-cartbar" id="cartbar">
+    <span class="powered"><span class="pw-lab">Powered by</span><span class="pw-msc">MSC<i>&#9612;</i></span></span>
     <span class="lab">Staging cart</span>
     <span class="val" id="barCount">0 items</span>
     <span class="val" id="barTotal">$0.00</span>
