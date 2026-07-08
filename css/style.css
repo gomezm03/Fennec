@@ -389,3 +389,14 @@ button.thumb:hover,button.thumb-sm:hover{box-shadow:0 0 0 2px var(--b200)}
 /* honest price-increase chips */
 .upchip{display:inline-flex;align-items:center;height:20px;padding:0 10px;border-radius:999px;background:var(--amber-bg);color:var(--amber);font-size:10.5px;font-weight:700;white-space:nowrap;margin-left:6px}
 .r-up{color:#F0C36D;font-family:var(--mono);font-weight:700}
+
+/* add-your-own-SKU compare */
+.addcmp{display:flex;gap:8px;align-items:center;margin:16px 0 0}
+.addcmp input{height:34px;border:1px solid var(--line);border-radius:var(--r);padding:0 12px;font-family:var(--mono);font-size:12px;width:230px;background:var(--surface)}
+.addcmp input:focus{border-color:var(--pri)}
+
+/* saved quotes + order confirmation */
+.quoterow{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);box-shadow:var(--sh-1);padding:10px 14px;margin-bottom:7px;font-size:12.5px}
+.quoterow .rr-p{margin-left:auto;font-family:var(--mono);font-weight:700}
+.confirm{text-align:center;padding:26px 0 6px;max-width:440px;margin:0 auto}
+.cf-ic{width:52px;height:52px;border-radius:999px;background:var(--green-bg);color:var(--green);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
