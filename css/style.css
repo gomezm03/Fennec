@@ -381,3 +381,7 @@ button.thumb:hover,button.thumb-sm:hover{box-shadow:0 0 0 2px var(--b200)}
 }
 
 .pdp-info{min-width:0}
+
+/* hidden attribute must always win over display rules */
+.pdp-overlay[hidden]{display:none}
+[hidden]{display:none!important}
